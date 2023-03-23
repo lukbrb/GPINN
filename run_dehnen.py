@@ -19,6 +19,17 @@ def dehnen(radius, _gamma, scale_factor=1):
     return (-1 / power1) * (1 - (radius / (radius + scale_factor)) ** power1)
 
 
+def pde(nn, x_pde):
+    _x, _gamma = x_pde[:, 0].unsqueeze(1), x_pde[:, 1].unsqueeze(1)
+    x_pde.requires_grad = True  # Enable differentiation
+    f = nn(x_pde)
+    f_x = torch.autograd.grad(f, x_pde, torch.ones(x_pde.shape[0], 1), retain_graph=True, create_graph=True)[0]
+    f_x = f_x[:, 0].unsqueeze(1)
+    func = f_x * _x ** 2
+    f_xx = torch.autograd.grad(func, x_pde, torch.ones(x_pde.shape[0], 1), retain_graph=True, create_graph=True)[0]
+    return f_xx
+
+
 # ========================= PARAMETERS =========================
 steps = 50_000
 lr = 1e-3
@@ -96,7 +107,7 @@ print(PINN)
 # optimizer = torch.optim.Adam(PINN.parameters(), lr=lr, amsgrad=False)
 
 training = TrainingPhase(neural_net=PINN, training_points=(X_train_Nu, Y_train_Nu, X_train_Nf),
-                         testing_points=(X_test, Y_test), n_epochs=steps,
+                         testing_points=(X_test, Y_test), equation=pde, n_epochs=steps,
                          optimizer=torch.optim.Adam,
                          _loss_function=torch.nn.MSELoss(reduction='mean'))
 
