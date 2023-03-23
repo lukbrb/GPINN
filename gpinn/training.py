@@ -5,10 +5,11 @@ from tqdm import trange
 
 # TODO: Adapter à n'importe quelle PDE
 class TrainingPhase:
-    def __init__(self, neural_net, training_points, testing_points, n_epochs, optimizer, _loss_function):
+    def __init__(self, neural_net, training_points, testing_points, equation, n_epochs, optimizer, _loss_function):
         self.neural_net = neural_net
         self.X_train_Nu, self.Y_train_Nu, self.X_train_Nf = training_points
         self.X_test, self.Y_test = testing_points
+        self.pde = equation
         self.n_epochs = n_epochs
         self.optimizer = optimizer
         self.loss_function = _loss_function
@@ -21,7 +22,7 @@ class TrainingPhase:
         _gamma = x_pde[:, 0].unsqueeze(1)
         power1 = 2 - _gamma
         power2 = 4 - _gamma
-        cout = pde(self.neural_net, x_pde) - (2 * x_pde[:, 0].unsqueeze(1) ** power1) / \
+        cout = self.pde(self.neural_net, x_pde) - (2 * x_pde[:, 0].unsqueeze(1) ** power1) / \
                (x_pde[:, 0].unsqueeze(1) + 1) ** power2
         return self.loss_function(cout, torch.zeros_like(cout))
 
@@ -56,14 +57,3 @@ class TrainingPhase:
 
     def save_model(self, filename):
         torch.save(self.neural_net, filename)
-
-
-def pde(nn, x_pde):
-    _x, _gamma = x_pde[:, 0].unsqueeze(1), x_pde[:, 1].unsqueeze(1)
-    x_pde.requires_grad = True  # Enable differentiation
-    f = nn(x_pde)
-    f_x = torch.autograd.grad(f, x_pde, torch.ones(x_pde.shape[0], 1), retain_graph=True, create_graph=True)[0]
-    f_x = f_x[:, 0].unsqueeze(1)
-    func = f_x * _x ** 2
-    f_xx = torch.autograd.grad(func, x_pde, torch.ones(x_pde.shape[0], 1), retain_graph=True, create_graph=True)[0]
-    return f_xx
