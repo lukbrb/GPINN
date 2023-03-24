@@ -113,3 +113,9 @@ training = TrainingPhase(neural_net=PINN, training_points=(X_train_Nu, Y_train_N
 
 net, epochs, losses = training.train_model()
 training.save_model("dehnen.pt")
+
+# TODO: Ajouter MPS backend pour accélérer l'entraînement du model
+# TODO: Ajouter analyse erreur post-entraînement
+# TODO: Ajouter erreur de validation pendant l'entraînement
+# TODO: Ajouter code pour graphes
+# TODO: Ajouter commandes au Makefile, avec arguments (ex: make graphes --dehnen --save=true)
