@@ -3,7 +3,6 @@ import numpy as np
 from tqdm import trange
 
 
-# TODO: Adapter à n'importe quelle PDE
 class TrainingPhase:
     def __init__(self, neural_net, training_points, testing_points, equation, n_epochs, optimizer, _loss_function):
         self.neural_net = neural_net
