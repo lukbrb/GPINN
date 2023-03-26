@@ -1,6 +1,8 @@
 """ Module for returning the trained models."""
 
 from pathlib import Path
+
+import numpy as np
 import torch
 
 from gpinn import network
@@ -17,11 +19,13 @@ def load_model(model_file: str) -> network.FCN:
     return model
 
 
-def hernquist():
+def hernquist(s, a=1):
     model = load_model("hernquist.pt")
-    return model
+    return model(s, a)
 
 
-def dehnen():
+def dehnen(s, gamma, a=1):
     model = load_model("dehnen.pt")
-    return model
+    gamma_tab = np.ones_like(s) * gamma
+    input_matrix = np.array([s, gamma_tab])
+    return model(input_matrix)
