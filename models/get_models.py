@@ -25,7 +25,7 @@ def hernquist(s, a=1):
 
 
 def dehnen(s, gamma, a=1):
-    model = load_model("dehnen.pt")
+    model = load_model("models/dehnen.pt")
     gamma_tab = np.ones_like(s) * gamma
-    input_matrix = np.array([s, gamma_tab])
+    input_matrix = np.array([s, gamma_tab]).T
     return model(input_matrix)
