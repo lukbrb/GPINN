@@ -52,6 +52,7 @@ class TrainingPhase:
             loss_value.backward()
             opt.step()
             losses.append(loss_value.item())
+            epochs.append(epoch)
         return self.neural_net, np.array(epochs), np.array(losses)
 
     def save_model(self, filename):
