@@ -112,7 +112,9 @@ training = TrainingPhase(neural_net=PINN, training_points=(X_train_Nu, Y_train_N
                          _loss_function=torch.nn.MSELoss(reduction='mean'))
 
 net, epochs, losses = training.train_model()
-training.save_model("dehnen.pt")
+np.save("arrays/loss.npy", losses)
+np.save("arrays/epochs.npy", epochs)
+training.save_model("models/dehnen.pt")
 
 # TODO: Ajouter MPS backend pour accélérer l'entraînement du model
 # TODO: Ajouter analyse erreur post-entraînement
