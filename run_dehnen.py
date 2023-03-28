@@ -5,8 +5,22 @@ from pyDOE import lhs
 from gpinn.network import FCN
 from gpinn.training import TrainingPhase
 
-
 # TODO: Changer la dérivée pour qu'elle ne soit qu'en fonction de x
+
+
+if not torch.backends.mps.is_available():
+    if not torch.backends.mps.is_built():
+        print("MPS not available because the current PyTorch install was not "
+              "built with MPS enabled.")
+    else:
+        print("MPS not available because the current MacOS version is not 12.3+ "
+              "and/or you do not have an MPS-enabled device on this machine.")
+        print("Switching to CPU")
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+else:
+    device = torch.device("mps")
+
+print(f"Using the {device}.")
 
 
 def dehnen(radius, _gamma, scale_factor=1):
@@ -20,20 +34,24 @@ def dehnen(radius, _gamma, scale_factor=1):
 
 
 def pde(nn, x_pde):
+    torch.autograd.set_detect_anomaly(True)
     _x, _gamma = x_pde[:, 0].unsqueeze(1), x_pde[:, 1].unsqueeze(1)
     x_pde.requires_grad = True  # Enable differentiation
     f = nn(x_pde)
-    f_x = torch.autograd.grad(f, x_pde, torch.ones(x_pde.shape[0], 1), retain_graph=True, create_graph=True)[0]
+    f_x = torch.autograd.grad(f, x_pde, torch.ones(x_pde.shape[0], 1).to(device),
+                              retain_graph=True, create_graph=True)[0]
+
     f_x = f_x[:, 0].unsqueeze(1)
     func = f_x * _x ** 2
-    f_xx = torch.autograd.grad(func, x_pde, torch.ones(x_pde.shape[0], 1), retain_graph=True, create_graph=True)[0]
+    f_xx = torch.autograd.grad(func, x_pde, torch.ones(x_pde.shape[0], 1).to(device),
+                               retain_graph=True, create_graph=True)[0]
     return f_xx
 
 
 # ========================= PARAMETERS =========================
 steps = 50_000
 lr = 1e-3
-layers = np.array([2, 32, 64, 32, 1])  # hidden layers
+layers = np.array([2, 32, 1])
 # To generate new data:
 x_min = 1e-2
 x_max = 10
@@ -46,8 +64,8 @@ Nu = 100
 Nf = 10000
 # ========================= DATA GENERATION =========================
 
-x = torch.linspace(x_min, x_max, total_points_x).view(-1, 1)
-gamma = torch.linspace(gamma_min, gamma_max, total_points_gamma).view(-1, 1)
+x = torch.linspace(x_min, x_max, total_points_x, device=device).view(-1, 1)
+gamma = torch.linspace(gamma_min, gamma_max, total_points_gamma, device=device).view(-1, 1)
 # Create the mesh
 X, GAMMA = torch.meshgrid(x.squeeze(1), gamma.squeeze(1), indexing='xy')
 y_real = dehnen(X, GAMMA)
@@ -91,7 +109,7 @@ Y_train_Nu = Y_train[idx, :]
 # TODO: Adapter ub  et lb à notre problème
 
 # Choose(Nf) points(Latin hypercube)
-X_train_Nf = lb + (ub - lb) * lhs(2, Nf)  # 2 as the inputs are x and t
+X_train_Nf = lb + (ub - lb) * torch.tensor(lhs(2, Nf)).float().to(device)  # 2 as the inputs are x and t
 X_train_Nf = torch.vstack((X_train_Nf, X_train_Nu))  # Add the training points to the collocation point
 
 # f_hat = torch.zeros(X_train_Nf.shape[0], 1)  # to minimize function
@@ -101,8 +119,11 @@ Y_test = y_test.float()  # the real solution
 
 # Create Model
 PINN = FCN(layers)
+PINN.to(device)
 
 print(PINN)
+print(X_train_Nu.device, Y_train_Nu.device, X_train_Nf.device)
+print(X_test.device, Y_test.device)
 
 # optimizer = torch.optim.Adam(PINN.parameters(), lr=lr, amsgrad=False)
 
