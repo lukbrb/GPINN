@@ -33,7 +33,7 @@ def pde(nn, x_pde):
 # ========================= PARAMETERS =========================
 steps = 50_000
 lr = 1e-3
-layers = np.array([2, 32, 32, 1])  # hidden layers
+layers = np.array([2, 32, 64, 32, 1])  # hidden layers
 # To generate new data:
 x_min = 1e-2
 x_max = 10
