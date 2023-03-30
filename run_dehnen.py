@@ -1,11 +1,9 @@
 import numpy as np
 import torch
 from pyDOE import lhs
-
+from sklearn.preprocessing import MinMaxScaler
 from gpinn.network import FCN
 from gpinn.training import TrainingPhase
-
-# TODO: Changer la dérivée pour qu'elle ne soit qu'en fonction de x
 
 
 if not torch.backends.mps.is_available():
@@ -21,6 +19,7 @@ else:
     device = torch.device("mps")
 
 print(f"Using the {device}.")
+device = torch.device('cpu')  # Does not work with mps due to floating point error
 
 
 def dehnen(radius, _gamma, scale_factor=1):
@@ -51,7 +50,7 @@ def pde(nn, x_pde):
 # ========================= PARAMETERS =========================
 steps = 50_000
 lr = 1e-3
-layers = np.array([2, 32, 1])
+layers = np.array([2, 50, 50, 20, 50, 50, 1])
 # To generate new data:
 x_min = 1e-2
 x_max = 10
@@ -137,8 +136,6 @@ np.save("arrays/loss.npy", losses)
 np.save("arrays/epochs.npy", epochs)
 training.save_model("models/dehnen.pt")
 
-# TODO: Ajouter MPS backend pour accélérer l'entraînement du model
-# TODO: Ajouter analyse erreur post-entraînement
+
+# TODO: Changer la dérivée pour qu'elle ne soit qu'en fonction de x
 # TODO: Ajouter erreur de validation pendant l'entraînement
-# TODO: Ajouter code pour graphes
-# TODO: Ajouter commandes au Makefile, avec arguments (ex: make graphes --dehnen --save=true)

@@ -23,6 +23,7 @@ def pde(nn, _device):
     #                          retain_graph=True, create_graph=True)[0]
     return f_x
 
+
 x = 0.1
 cpu_tensor = torch.exp(torch.tensor(x))
 mps_tensor = torch.exp(torch.tensor(x, device=torch.device("mps")))

@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     # -------- Plot the diff depending on gamma and s -----------
     s = np.linspace(1e-2, 10, 1000)
-    gammas = np.linspace(0, 2.99, 100)
+    gammas = np.linspace(0, 2, 100)
     abs_diffs = []
     rel_diffs = []
     for gamma in gammas:
