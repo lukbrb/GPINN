@@ -29,7 +29,7 @@ def error_ratio(y_pred, y_true, plot=False):
 
 
 def relative_error(y_pred, y_true, plot=False):
-    result = (y_pred - y_true) / y_true
+    result = abs((y_pred - y_true) / y_true)
     if not plot:
         return result
 
