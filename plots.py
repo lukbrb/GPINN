@@ -110,13 +110,10 @@ if __name__ == "__main__":
 
     # -------- Plot the diff depending on gamma and s -----------
     s = np.linspace(1e-2, 10, 1000)
-<<<<<<< Updated upstream
     gammas = np.linspace(0, 2.99, 100)
     abs_diffs = []
-=======
     gammas = np.linspace(0, 2, 100)
 
->>>>>>> Stashed changes
     rel_diffs = []
     dehnen_true = []
     dehnen_predicted = []
