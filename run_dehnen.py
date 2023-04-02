@@ -2,20 +2,17 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 from pyDOE import lhs
-<<<<<<< Updated upstream
 
 from gpinn.network import FCN
 from gpinn.training import TrainingPhase
 
-
 # TODO: Changer la dérivée pour qu'elle ne soit qu'en fonction de x
-=======
+
 # from sklearn.preprocessing import MinMaxScaler
 from gpinn.network import FCN
 from gpinn.training import TrainingPhase
 
 plt.style.use('seaborn-v0_8-darkgrid')
->>>>>>> Stashed changes
 
 
 def dehnen(radius, _gamma, scale_factor=1):
@@ -28,17 +25,6 @@ def dehnen(radius, _gamma, scale_factor=1):
     return (-1 / power1) * (1 - (radius / (radius + scale_factor)) ** power1)
 
 
-<<<<<<< Updated upstream
-def pde(nn, x_pde):
-    _x, _gamma = x_pde[:, 0].unsqueeze(1), x_pde[:, 1].unsqueeze(1)
-    x_pde.requires_grad = True  # Enable differentiation
-    f = nn(x_pde)
-    f_x = torch.autograd.grad(f, x_pde, torch.ones(x_pde.shape[0], 1), retain_graph=True, create_graph=True)[0]
-    f_x = f_x[:, 0].unsqueeze(1)
-    func = f_x * _x ** 2
-    f_xx = torch.autograd.grad(func, x_pde, torch.ones(x_pde.shape[0], 1), retain_graph=True, create_graph=True)[0]
-    return f_xx
-=======
 def pde_residual(nn, x_pde):
     _x, _gamma = x_pde[:, 0].unsqueeze(1), x_pde[:, 1].unsqueeze(1)
     x_pde.requires_grad = True  # Enable differentiation
@@ -57,18 +43,13 @@ def pde_residual(nn, x_pde):
 
 def mse(array: torch.Tensor, norm=2):
     return array.pow(norm).mean()
->>>>>>> Stashed changes
 
 
 # ========================= PARAMETERS =========================
 steps = 50_000
-<<<<<<< Updated upstream
-lr = 1e-3
-layers = np.array([2, 32, 64, 32, 1])  # hidden layers
-=======
-lr = 1e-4
+
 layers = np.array([2, 8, 32, 16, 1])
->>>>>>> Stashed changes
+
 # To generate new data:
 x_min = 1e-2
 x_max = 10
@@ -142,12 +123,7 @@ X_test = x_test.float()  # the input dataset (complete)
 Y_test = y_test.float()  # the real solution
 
 # Create Model
-<<<<<<< Updated upstream
-PINN = FCN(layers)
-=======
 PINN = FCN(layers)  # , act=torch.nn.SiLU())
-PINN.to()
->>>>>>> Stashed changes
 
 print(PINN)
 
@@ -163,12 +139,8 @@ np.save("arrays/loss.npy", losses)
 np.save("arrays/epochs.npy", epochs)
 training.save_model("models/dehnen.pt")
 
-<<<<<<< Updated upstream
-# TODO: Ajouter MPS backend pour accélérer l'entraînement du model
-# TODO: Ajouter analyse erreur post-entraînement
-=======
 # TODO: Changer la dérivée pour qu'elle ne soit qu'en fonction de x
->>>>>>> Stashed changes
+
 # TODO: Ajouter erreur de validation pendant l'entraînement
 # TODO: Ajouter code pour graphes
 # TODO: Ajouter commandes au Makefile, avec arguments (ex: make graphes --dehnen --save=true)
