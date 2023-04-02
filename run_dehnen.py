@@ -1,12 +1,21 @@
 import numpy as np
 import torch
+import matplotlib.pyplot as plt
 from pyDOE import lhs
+<<<<<<< Updated upstream
 
 from gpinn.network import FCN
 from gpinn.training import TrainingPhase
 
 
 # TODO: Changer la dérivée pour qu'elle ne soit qu'en fonction de x
+=======
+# from sklearn.preprocessing import MinMaxScaler
+from gpinn.network import FCN
+from gpinn.training import TrainingPhase
+
+plt.style.use('seaborn-v0_8-darkgrid')
+>>>>>>> Stashed changes
 
 
 def dehnen(radius, _gamma, scale_factor=1):
@@ -19,6 +28,7 @@ def dehnen(radius, _gamma, scale_factor=1):
     return (-1 / power1) * (1 - (radius / (radius + scale_factor)) ** power1)
 
 
+<<<<<<< Updated upstream
 def pde(nn, x_pde):
     _x, _gamma = x_pde[:, 0].unsqueeze(1), x_pde[:, 1].unsqueeze(1)
     x_pde.requires_grad = True  # Enable differentiation
@@ -28,22 +38,47 @@ def pde(nn, x_pde):
     func = f_x * _x ** 2
     f_xx = torch.autograd.grad(func, x_pde, torch.ones(x_pde.shape[0], 1), retain_graph=True, create_graph=True)[0]
     return f_xx
+=======
+def pde_residual(nn, x_pde):
+    _x, _gamma = x_pde[:, 0].unsqueeze(1), x_pde[:, 1].unsqueeze(1)
+    x_pde.requires_grad = True  # Enable differentiation
+    f = nn(x_pde)
+    f_x = torch.autograd.grad(f, x_pde, torch.ones(x_pde.shape[0], 1),
+                              retain_graph=True, create_graph=True)[0]
+
+    f_x = f_x[:, 0].unsqueeze(1)
+    func = f_x * _x ** 2
+    f_xx = torch.autograd.grad(func, x_pde, torch.ones(x_pde.shape[0], 1),
+                               retain_graph=True, create_graph=True)[0]
+    _gamma = x_pde[:, 1].unsqueeze(1)
+    residual = f_xx - (2 * x_pde[:, 0].unsqueeze(1) ** (2 - _gamma)) / (x_pde[:, 0].unsqueeze(1) + 1) ** (4 - _gamma)
+    return residual
+
+
+def mse(array: torch.Tensor, norm=2):
+    return array.pow(norm).mean()
+>>>>>>> Stashed changes
 
 
 # ========================= PARAMETERS =========================
 steps = 50_000
+<<<<<<< Updated upstream
 lr = 1e-3
 layers = np.array([2, 32, 64, 32, 1])  # hidden layers
+=======
+lr = 1e-4
+layers = np.array([2, 8, 32, 16, 1])
+>>>>>>> Stashed changes
 # To generate new data:
 x_min = 1e-2
 x_max = 10
 gamma_min = 0
-gamma_max = 2.99
-total_points_x = 200
+gamma_max = 1.99
+total_points_x = 300
 total_points_gamma = 100
 # Nu: Number of training points # Nf: Number of collocation points (Evaluate PDE)
 Nu = 100
-Nf = 10000
+Nf = 1024
 # ========================= DATA GENERATION =========================
 
 x = torch.linspace(x_min, x_max, total_points_x).view(-1, 1)
@@ -83,41 +118,57 @@ X_train = torch.vstack([left_X, bottom_X, top_X, right_X])
 Y_train = torch.vstack([left_Y, bottom_Y, top_Y, right_Y])
 # Choose(Nu) points of our available training data:
 idx = np.random.choice(X_train.shape[0], Nu, replace=False)
-X_train_Nu = X_train[idx, :]
-Y_train_Nu = Y_train[idx, :]
+X_train_Nu = X_train  # [idx, :]
+Y_train_Nu = Y_train  # [idx, :]
 # Collocation Points (Evaluate our PDe)
 
-
-# TODO: Adapter ub  et lb à notre problème
 
 # Choose(Nf) points(Latin hypercube)
 X_train_Nf = lb + (ub - lb) * lhs(2, Nf)  # 2 as the inputs are x and t
 X_train_Nf = torch.vstack((X_train_Nf, X_train_Nu))  # Add the training points to the collocation point
 
 # f_hat = torch.zeros(X_train_Nf.shape[0], 1)  # to minimize function
+plt.figure()
+plt.title("Configuration of training points")
+plt.plot(X_train_Nu[:, 0], X_train_Nu[:, 1], 'xr', label="Boundary Points")
+plt.plot(X_train_Nf[:, 0], X_train_Nf[:, 1], '.b', label="Collocation Points")
+plt.xlabel('$s$')
+plt.ylabel(r'$\gamma$')
+plt.legend()
+plt.show()
+plt.close()
 
 X_test = x_test.float()  # the input dataset (complete)
 Y_test = y_test.float()  # the real solution
 
 # Create Model
+<<<<<<< Updated upstream
 PINN = FCN(layers)
+=======
+PINN = FCN(layers)  # , act=torch.nn.SiLU())
+PINN.to()
+>>>>>>> Stashed changes
 
 print(PINN)
 
 # optimizer = torch.optim.Adam(PINN.parameters(), lr=lr, amsgrad=False)
 
 training = TrainingPhase(neural_net=PINN, training_points=(X_train_Nu, Y_train_Nu, X_train_Nf),
-                         testing_points=(X_test, Y_test), equation=pde, n_epochs=steps,
+                         testing_points=(X_test, Y_test), equation=pde_residual, n_epochs=steps,
                          optimizer=torch.optim.Adam,
-                         _loss_function=torch.nn.MSELoss(reduction='mean'))
+                         _loss_function=mse, norm=2)
 
 net, epochs, losses = training.train_model()
 np.save("arrays/loss.npy", losses)
 np.save("arrays/epochs.npy", epochs)
 training.save_model("models/dehnen.pt")
 
+<<<<<<< Updated upstream
 # TODO: Ajouter MPS backend pour accélérer l'entraînement du model
 # TODO: Ajouter analyse erreur post-entraînement
+=======
+# TODO: Changer la dérivée pour qu'elle ne soit qu'en fonction de x
+>>>>>>> Stashed changes
 # TODO: Ajouter erreur de validation pendant l'entraînement
 # TODO: Ajouter code pour graphes
 # TODO: Ajouter commandes au Makefile, avec arguments (ex: make graphes --dehnen --save=true)
