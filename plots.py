@@ -67,19 +67,21 @@ def plot_scatter_s_gamma(s, gamma, diff, title="Relative Difference"):
     plt.show()
 
 
-def plot_image_s_gamma(s, gamma, diff, title="Relative Difference"):
+def plot_image_s_gamma(s, gamma, diff, title="Relative Difference", cmap='coolwarm'):
     # Création du graphique
     fig, ax = plt.subplots()
     # Définition des axes
     ax.set_xlabel(r'$s$')
     ax.set_ylabel(r'$\gamma$')
     # Tracé de l'image continue colorée par la différence relative entre les prédictions NN et le profil analytique
-    image = ax.imshow(diff, extent=[s.min(), s.max(), gamma.min(), gamma.max()], cmap='coolwarm', origin='lower',
+    image = ax.imshow(diff, extent=[s.min(), s.max(), gamma.min(), gamma.max()], cmap=cmap, origin='lower',
                       aspect='auto')
 
     # Ajout de la barre de couleur
     cbar = plt.colorbar(image)
     cbar.set_label(title)
+    vmin, vmax = np.percentile(diff, (5, 95))
+    image.set_clim(vmin=vmin, vmax=vmax)
 
     # Affichage du graphique
     plt.show()
@@ -108,19 +110,29 @@ if __name__ == "__main__":
 
     # -------- Plot the diff depending on gamma and s -----------
     s = np.linspace(1e-2, 10, 1000)
+<<<<<<< Updated upstream
     gammas = np.linspace(0, 2.99, 100)
     abs_diffs = []
+=======
+    gammas = np.linspace(0, 2, 100)
+
+>>>>>>> Stashed changes
     rel_diffs = []
+    dehnen_true = []
+    dehnen_predicted = []
     for gamma in gammas:
         y_pred = dehnen(s, gamma=gamma).detach().numpy().flatten()
         y_true = potentials.dehnen(s, gamma=gamma)
-        abs_diff = erreur_difference(y_pred=y_pred, y_true=y_true)
         rel_diff = relative_error(y_pred=y_pred, y_true=y_true)
-        print(mean_squared_error(y_true=y_true, y_pred=y_pred))
-        abs_diffs.append(abs_diff)
+
+        dehnen_true.append(y_true)
+        dehnen_predicted.append(y_pred)
         rel_diffs.append(rel_diff)
 
-    abs_diffs = np.array(abs_diffs)
     rel_diffs = np.array(rel_diffs)
-    plot_image_s_gamma(s, gammas, abs_diffs, title='Absolute difference')
+    dehnen_true = np.array(dehnen_true)
+    dehnen_predicted = np.array(dehnen_predicted)
+
     plot_image_s_gamma(s, gammas, rel_diffs, title='Relative difference')
+    plot_image_s_gamma(s, gammas, dehnen_true, title='Analytical values of Dehnen profile', cmap='viridis')
+    plot_image_s_gamma(s, gammas, rel_diffs, title='Predicted values of Dehnen profile', cmap='viridis')
