@@ -6,12 +6,6 @@ from pyDOE import lhs
 from gpinn.network import FCN
 from gpinn.training import TrainingPhase
 
-# TODO: Changer la dérivée pour qu'elle ne soit qu'en fonction de x
-
-# from sklearn.preprocessing import MinMaxScaler
-from gpinn.network import FCN
-from gpinn.training import TrainingPhase
-
 plt.style.use('seaborn-v0_8-darkgrid')
 
 
@@ -37,24 +31,29 @@ def pde_residual(nn, x_pde):
     f_xx = torch.autograd.grad(func, x_pde, torch.ones(x_pde.shape[0], 1),
                                retain_graph=True, create_graph=True)[0]
     _gamma = x_pde[:, 1].unsqueeze(1)
-    residual = f_xx - (2 * x_pde[:, 0].unsqueeze(1) ** (2 - _gamma)) / (x_pde[:, 0].unsqueeze(1) + 1) ** (4 - _gamma)
-    return residual
+    y_true = (2 * x_pde[:, 0].unsqueeze(1) ** (2 - _gamma)) / (x_pde[:, 0].unsqueeze(1) + 1) ** (4 - _gamma)
+    return f_xx - y_true
 
 
-def mse(array: torch.Tensor, norm=2):
-    return array.pow(norm).mean()
+def mse(y_true: torch.Tensor, y_pred: torch.Tensor):
+    diff = y_pred - y_true
+    return diff.pow(2).mean()
+
+
+def rmse(array: torch.Tensor):
+    return torch.abs(array).mean()
 
 
 # ========================= PARAMETERS =========================
-steps = 50_000
+steps = 10_000
 
-layers = np.array([2, 8, 32, 16, 1])
+layers = np.array([2, 32, 16, 1])
 
 # To generate new data:
 x_min = 1e-2
 x_max = 10
 gamma_min = 0
-gamma_max = 1.99
+gamma_max = 2.99
 total_points_x = 300
 total_points_gamma = 100
 # Nu: Number of training points # Nf: Number of collocation points (Evaluate PDE)
@@ -105,7 +104,7 @@ Y_train_Nu = Y_train  # [idx, :]
 
 
 # Choose(Nf) points(Latin hypercube)
-X_train_Nf = lb + (ub - lb) * lhs(2, Nf)  # 2 as the inputs are x and t
+X_train_Nf = lb + (ub - lb) * lhs(2, Nf)  # 2 as the inputs are x and gamma
 X_train_Nf = torch.vstack((X_train_Nf, X_train_Nu))  # Add the training points to the collocation point
 
 # f_hat = torch.zeros(X_train_Nf.shape[0], 1)  # to minimize function
@@ -123,24 +122,20 @@ X_test = x_test.float()  # the input dataset (complete)
 Y_test = y_test.float()  # the real solution
 
 # Create Model
-PINN = FCN(layers)  # , act=torch.nn.SiLU())
+PINN = FCN(layers) #, act=torch.nn.SiLU())
 
 print(PINN)
-
-# optimizer = torch.optim.Adam(PINN.parameters(), lr=lr, amsgrad=False)
 
 training = TrainingPhase(neural_net=PINN, training_points=(X_train_Nu, Y_train_Nu, X_train_Nf),
                          testing_points=(X_test, Y_test), equation=pde_residual, n_epochs=steps,
                          optimizer=torch.optim.Adam,
-                         _loss_function=mse, norm=2)
+                         _loss_function=rmse)
 
 net, epochs, losses = training.train_model()
+torch.save(net.state_dict(), 'test.pth')
 np.save("arrays/loss.npy", losses)
 np.save("arrays/epochs.npy", epochs)
 training.save_model("models/dehnen.pt")
 
 # TODO: Changer la dérivée pour qu'elle ne soit qu'en fonction de x
-
 # TODO: Ajouter erreur de validation pendant l'entraînement
-# TODO: Ajouter code pour graphes
-# TODO: Ajouter commandes au Makefile, avec arguments (ex: make graphes --dehnen --save=true)
