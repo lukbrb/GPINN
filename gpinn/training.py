@@ -4,8 +4,7 @@ from tqdm import trange
 
 
 class TrainingPhase:
-    def __init__(self, neural_net, *, training_points, testing_points, equation, n_epochs, optimizer, _loss_function,
-                 norm=1):
+    def __init__(self, neural_net, *, training_points, testing_points, equation, n_epochs, optimizer, _loss_function):
         self.neural_net = neural_net
         self.X_train_Nu, self.Y_train_Nu, self.X_train_Nf = training_points
         self.X_test, self.Y_test = testing_points
@@ -14,15 +13,14 @@ class TrainingPhase:
         self.optimizer = optimizer
         self.loss_function = _loss_function
         self.iter = 0
-        self.norm = norm
 
     def loss_boundary(self, x_boundary, y_boundary):
-        boundary_residual = y_boundary - self.neural_net.forward(x_boundary)
-        return self.loss_function(boundary_residual, norm=self.norm)
+        diff = y_boundary - self.neural_net.forward(x_boundary)
+        return self.loss_function(diff)
 
     def loss_equation(self, x_pde):
         residual = self.pde(self.neural_net, x_pde)
-        return self.loss_function(residual, norm=1)
+        return self.loss_function(residual)
 
     def loss(self, x_boundary, y_boundary, x_pde):
         loss_bc = self.loss_boundary(x_boundary, y_boundary)
