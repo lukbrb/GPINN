@@ -20,7 +20,7 @@ def load_model(model_file: str) -> network.FCN:
 
 
 def hernquist(s, a=1):
-    model = load_model("hernquist.pt")
+    model = load_model("models/hernquist.pt")
     return model(s, a)
 
 
