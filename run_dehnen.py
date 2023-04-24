@@ -20,18 +20,20 @@ def dehnen(radius, _gamma, scale_factor=1):
 
 
 def pde_residual(nn, x_pde):
-    _x, _gamma = x_pde[:, 0].unsqueeze(1), x_pde[:, 1].unsqueeze(1)
+    # _x, _gamma = x_pde[:, 0].unsqueeze(1), x_pde[:, 1].unsqueeze(1)
+    _x, _gamma = torch.split(x_pde, 1, dim=1)
+
     x_pde.requires_grad = True  # Enable differentiation
     f = nn(x_pde)
-    f_x = torch.autograd.grad(f, x_pde, torch.ones(x_pde.shape[0], 1),
-                              retain_graph=True, create_graph=True)[0]
+    f_x_gamma = torch.autograd.grad(f, x_pde, torch.ones(x_pde.shape[0], 1),
+                                    retain_graph=True, create_graph=True)[0]
 
-    f_x = f_x[:, 0].unsqueeze(1)
+    f_x = f_x_gamma[:, 0].unsqueeze(1)
     func = f_x * _x ** 2
-    f_xx = torch.autograd.grad(func, x_pde, torch.ones(x_pde.shape[0], 1),
-                               retain_graph=True, create_graph=True)[0]
-    _gamma = x_pde[:, 1].unsqueeze(1)
-    y_true = (2 * x_pde[:, 0].unsqueeze(1) ** (2 - _gamma)) / (x_pde[:, 0].unsqueeze(1) + 1) ** (4 - _gamma)
+    f_xx_gamma = torch.autograd.grad(func, x_pde, torch.ones(x_pde.shape[0], 1),
+                                     retain_graph=True, create_graph=True)[0]
+    f_xx = f_xx_gamma[:, 0].unsqueeze(1)
+    y_true = (2 * _x ** (2 - _gamma)) / (_x + 1) ** (4 - _gamma)
     return f_xx - y_true
 
 
@@ -45,7 +47,7 @@ def rmse(array: torch.Tensor):
 
 
 # ========================= PARAMETERS =========================
-steps = 10_000
+steps = 100_000
 
 layers = np.array([2, 32, 16, 1])
 
@@ -122,7 +124,7 @@ X_test = x_test.float()  # the input dataset (complete)
 Y_test = y_test.float()  # the real solution
 
 # Create Model
-PINN = FCN(layers) #, act=torch.nn.SiLU())
+PINN = FCN(layers)  # , act=torch.nn.SiLU())
 
 print(PINN)
 
@@ -132,7 +134,7 @@ training = TrainingPhase(neural_net=PINN, training_points=(X_train_Nu, Y_train_N
                          _loss_function=rmse)
 
 net, epochs, losses = training.train_model()
-torch.save(net.state_dict(), 'test.pth')
+# torch.save(net.state_dict(), 'test.pth')
 np.save("arrays/loss.npy", losses)
 np.save("arrays/epochs.npy", epochs)
 training.save_model("models/dehnen.pt")
