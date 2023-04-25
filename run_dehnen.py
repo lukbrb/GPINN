@@ -20,7 +20,6 @@ def dehnen(radius, _gamma, scale_factor=1):
 
 
 def pde_residual(nn, x_pde):
-    # _x, _gamma = x_pde[:, 0].unsqueeze(1), x_pde[:, 1].unsqueeze(1)
     _x, _gamma = torch.split(x_pde, 1, dim=1)
 
     x_pde.requires_grad = True  # Enable differentiation
@@ -37,19 +36,22 @@ def pde_residual(nn, x_pde):
     return f_xx - y_true
 
 
-def mse(y_true: torch.Tensor, y_pred: torch.Tensor):
-    diff = y_pred - y_true
-    return diff.pow(2).mean()
+def mse(residual: torch.Tensor):
+    return residual.pow(2).mean()
 
 
-def rmse(array: torch.Tensor):
+def rmse(residual: torch.Tensor):
+    return torch.sqrt(residual.pow(2).mean())
+
+
+def mae(array: torch.Tensor):
     return torch.abs(array).mean()
 
 
 # ========================= PARAMETERS =========================
-steps = 100_000
+steps = 10_000
 
-layers = np.array([2, 32, 16, 1])
+layers = np.array([2, 32, 32, 32, 32, 1])
 
 # To generate new data:
 x_min = 1e-2
@@ -59,7 +61,7 @@ gamma_max = 2.99
 total_points_x = 300
 total_points_gamma = 100
 # Nu: Number of training points # Nf: Number of collocation points (Evaluate PDE)
-Nu = 100
+Nu = 500
 Nf = 1024
 # ========================= DATA GENERATION =========================
 
@@ -100,14 +102,14 @@ X_train = torch.vstack([left_X, bottom_X, top_X, right_X])
 Y_train = torch.vstack([left_Y, bottom_Y, top_Y, right_Y])
 # Choose(Nu) points of our available training data:
 idx = np.random.choice(X_train.shape[0], Nu, replace=False)
-X_train_Nu = X_train  # [idx, :]
-Y_train_Nu = Y_train  # [idx, :]
+X_train_Nu = X_train[idx, :]
+Y_train_Nu = Y_train[idx, :]
 # Collocation Points (Evaluate our PDe)
 
 
 # Choose(Nf) points(Latin hypercube)
 X_train_Nf = lb + (ub - lb) * lhs(2, Nf)  # 2 as the inputs are x and gamma
-X_train_Nf = torch.vstack((X_train_Nf, X_train_Nu))  # Add the training points to the collocation point
+# X_train_Nf = torch.vstack((X_train_Nf, X_train_Nu))  # Add the training points to the collocation point
 
 # f_hat = torch.zeros(X_train_Nf.shape[0], 1)  # to minimize function
 plt.figure()
@@ -131,7 +133,7 @@ print(PINN)
 training = TrainingPhase(neural_net=PINN, training_points=(X_train_Nu, Y_train_Nu, X_train_Nf),
                          testing_points=(X_test, Y_test), equation=pde_residual, n_epochs=steps,
                          optimizer=torch.optim.Adam,
-                         _loss_function=rmse)
+                         _loss_function=mae)
 
 net, epochs, losses = training.train_model()
 # torch.save(net.state_dict(), 'test.pth')
@@ -139,5 +141,4 @@ np.save("arrays/loss.npy", losses)
 np.save("arrays/epochs.npy", epochs)
 training.save_model("models/dehnen.pt")
 
-# TODO: Changer la dérivée pour qu'elle ne soit qu'en fonction de x
 # TODO: Ajouter erreur de validation pendant l'entraînement
