@@ -4,13 +4,12 @@ from tqdm import trange
 
 
 class TrainingPhase:
-    def __init__(self, neural_net, *, training_points, testing_points, equation, n_epochs, optimizer, _loss_function):
+    def __init__(self, neural_net, *, training_points, testing_points, equation, n_epochs, _loss_function):
         self.neural_net = neural_net
         self.X_train_Nu, self.Y_train_Nu, self.X_train_Nf = training_points
         self.X_test, self.Y_test = testing_points
         self.pde = equation
         self.n_epochs = n_epochs
-        self.optimizer = optimizer
         self.loss_function = _loss_function
         self.iter = 0
 
@@ -38,8 +37,8 @@ class TrainingPhase:
             print("Training Error:", loss.detach().cpu().numpy(), "---Testing Error:", loss2.detach().numpy())
         return loss
 
-    def train_model(self):
-        opt = self.optimizer(self.neural_net.parameters(), lr=1e-3)
+    def train_model(self, optimizer, learning_rate):
+        opt = optimizer(self.neural_net.parameters(), lr=learning_rate)
 
         losses = []
         epochs = []
