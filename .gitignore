@@ -158,5 +158,5 @@ cython_debug/
 # previous trials
 /resultats
 /brouillons
-
-
+/tuning
+/notebooks/scaled_exponential-disc.ipynb
