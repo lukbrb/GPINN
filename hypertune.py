@@ -125,7 +125,7 @@ def find_best_params(params: dict, num_steps=10_000):
 
                             i += 1
                             max_accuracy[model_name] = accuracies.min()
-                            print(f"Validation accuracy of the model: {accuracies.min()} [{accuracies.min(): %}]")
+                            print(f"Relative error of the model: {accuracies.min()} [{accuracies.min(): %}]")
 
     best_model = max(max_accuracy, key=max_accuracy.get)
     best_accuracy = max_accuracy[best_model]
