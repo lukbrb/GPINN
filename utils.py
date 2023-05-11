@@ -1,5 +1,6 @@
 import random
 import string
+import sqlite3
 import numpy as np
 import torch
 from scipy.interpolate import RegularGridInterpolator
@@ -38,3 +39,50 @@ def random_string(length):
     # Utilisez la fonction choice pour sélectionner un caractère aléatoire pour chaque position dans la chaîne
     random_str = ''.join(random.choice(characters) for _ in range(length))
     return random_str
+
+
+def generate_model_name(activation, num_layers, num_neurons, error_func, learning_rate):
+    activation_name = activation.__class__.__name__.lower()
+    error_func_name = error_func.__name__.lower()
+    learning_rate_exp = int(np.log10(learning_rate))
+
+    model_name = f"{activation_name}{num_layers}{num_neurons}{error_func_name}1e{learning_rate_exp}"
+    return model_name
+
+
+def create_connection(database):
+    conn = None
+    try:
+        conn = sqlite3.connect(database)
+    except sqlite3.Error as e:
+        print(e)
+    return conn
+
+
+def create_table(conn):
+    sql_create_results_table = """CREATE TABLE IF NOT EXISTS results (
+                                    id INTEGER PRIMARY KEY,
+                                    model_name TEXT NOT NULL UNIQUE,
+                                    accuracy REAL NOT NULL
+                                );"""
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute(sql_create_results_table)
+    except sqlite3.Error as e:
+        print(e)
+
+
+def insert_result(conn, result):
+    sql = """INSERT INTO results(model_name, accuracy) VALUES(?, ?);"""
+    cursor = conn.cursor()
+    cursor.execute(sql, result)
+    conn.commit()
+
+
+def check_model_exists(conn, model_name):
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM results WHERE model_name=?", (model_name,))
+    return cursor.fetchone() is not None
+
+# Renvoie "True" si existe déjà
