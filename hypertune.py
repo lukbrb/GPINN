@@ -12,12 +12,8 @@ from residuals import pde_exponential_disc
 from utils import (phi_inter, random_string, create_connection, create_table,
                    insert_result, check_model_exists, generate_model_name)
 
-DATABASE = True
-if DATABASE:
-    db_name = "results.db"
-    conn = create_connection(db_name)
-    create_table(conn)
 
+DATABASE = True
 Rd = 4
 eta = 0.2
 zd = Rd * eta
@@ -89,14 +85,14 @@ def tot_computations(params: dict, verbose=False):
 def write_results(params, results, model_name, num_steps):
     layers, activation, err_func, lr = params
     epochs, train_losses, val_losses, accuracies = results
-    with open(f"tuning/{model_name}.txt", 'a') as f:
-        f.write(f"\nLayers: {layers}\n"
+    with open(f"tuning/{model_name}.txt", 'w') as f:
+        f.write(f"Layers: {layers}\n"
                 f"Activation: {activation}\n"
                 f"Error function: {err_func.__name__}\n"
                 f"Learning rate: {lr}\n"
+                f"Number of steps: {num_steps}\n"
                 f"----------------------------\n"
-                f"Max accuracy: {accuracies.min()}\n"
-                f"Reached at epoch: {epochs[accuracies.argmin()] + 1}/{num_steps}\n"
+                f"Mean relative error: {accuracies.mean()}\n"
                 f"Model reference: {model_name}"
                 )
         # np.save(f"tuning/{model_name}_train_loss.npy", train_losses)
@@ -126,18 +122,22 @@ def find_best_params(params: dict, num_steps=10_000):
                                                      n_epochs=num_steps,
                                                      _loss_function=err_func)
                             print(f"Training model {i}/{tot_computations(params)}")
+
                             net, epochs, train_losses, val_losses, accuracies = training.train_model(
                                 optimizer=torch.optim.Adam,
                                 learning_rate=lr)
 
-                            insert_result(conn, (model_name, float(accuracies.min())))
+                            accuracy = np.abs(((Y_val - net(X_val).detach()) / Y_val).numpy())
+                            insert_result(conn, (model_name, float(np.mean(accuracy)), float(np.min(accuracy)),
+                                                 float(np.max(accuracy)), float(np.median(accuracy)))
+                                          )
                             write_results(params=(layers, activation, err_func, lr),
                                           results=(epochs, train_losses, val_losses, accuracies),
                                           model_name=model_name, num_steps=num_steps)
                             # training.save_model(f"tuning/{model_name}_model.pt")
                             i += 1
-                            max_accuracy[model_name] = accuracies.min()
-                            print(f"Relative error of the model for {lr=}: {accuracies.min(): %}")
+                            max_accuracy[model_name] = np.mean(accuracy)
+                            print(f"Relative error of the model for {lr=}: {np.mean(accuracy): %}")
                         else:
                             print(f"[*] Model {model_name} already exists, not training again.")
     best_model = max(max_accuracy, key=max_accuracy.get)
@@ -195,6 +195,7 @@ def find_best_params_parallelized(params: dict, num_steps=10_000):
 
 
 def main():
+
     parameters = {
         'num_neurons': [32, 64, 128],
         'num_layers': list(range(1, 7)),
@@ -211,6 +212,11 @@ def main():
 
 if __name__ == '__main__':
     start = time.time()
+    if DATABASE:
+        db_name = "results.db"
+        conn = create_connection(db_name)
+        print("Creating table...")
+        create_table(conn)
     main()
     tot_time = time.time() - start
     print(f"Programm finished in {tot_time} seconds.")
