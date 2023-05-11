@@ -60,10 +60,13 @@ def create_connection(database):
 
 
 def create_table(conn):
-    sql_create_results_table = """CREATE TABLE IF NOT EXISTS results (
+    sql_create_results_table = """CREATE TABLE IF NOT EXISTS expdisc (
                                     id INTEGER PRIMARY KEY,
                                     model_name TEXT NOT NULL UNIQUE,
-                                    accuracy REAL NOT NULL
+                                    mean_accuracy REAL NOT NULL,
+                                    min_accuracy REAL NOT NULL,
+                                    max_accuracy REAL NOT NULL,
+                                    median_accuracy REAL NOT NULL
                                 );"""
 
     try:
@@ -74,7 +77,8 @@ def create_table(conn):
 
 
 def insert_result(conn, result):
-    sql = """INSERT INTO results(model_name, accuracy) VALUES(?, ?);"""
+    sql = """INSERT INTO expdisc (model_name, mean_accuracy, min_accuracy, max_accuracy, median_accuracy) 
+    VALUES(?, ?, ?, ?, ?);"""
     cursor = conn.cursor()
     cursor.execute(sql, result)
     conn.commit()
@@ -82,7 +86,7 @@ def insert_result(conn, result):
 
 def check_model_exists(conn, model_name):
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM results WHERE model_name=?", (model_name,))
+    cursor.execute("SELECT * FROM expdisc WHERE model_name=?", (model_name,))
     return cursor.fetchone() is not None
 
 # Renvoie "True" si existe déjà
