@@ -1,4 +1,5 @@
 import time
+from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import torch
 from torch import nn
@@ -8,7 +9,14 @@ from gpinn.network import FCN
 from gpinn.training import TrainingPhase
 from metrics import mse, mae, rmse
 from residuals import pde_exponential_disc
-from utils import phi_inter, random_string
+from utils import (phi_inter, random_string, create_connection, create_table,
+                   insert_result, check_model_exists, generate_model_name)
+
+DATABASE = True
+if DATABASE:
+    db_name = "results.db"
+    conn = create_connection(db_name)
+    create_table(conn)
 
 Rd = 4
 eta = 0.2
@@ -64,15 +72,6 @@ lb = torch.Tensor([r[0], z[0]])
 ub = torch.Tensor([r[-1], z[-1]])
 X_train_Nf = lb + (ub - lb) * lhs(2, Nf)  # 2 as the inputs are x and gamma
 
-parameters = {
-    'num_neurons': [32, 64, 128],
-    'num_layers': list(range(1, 7)),
-    'learning_rate': [1e-4, 1e-5, 1e-6],
-    'error_func': [mse],  # , mae, rmse]
-    'activation': [nn.Tanh(), nn.Sigmoid(), nn.SiLU(), nn.LogSigmoid()]
-
-}
-
 
 def tot_computations(params: dict, verbose=False):
     tot_neurons = len(params['num_neurons'])
@@ -87,6 +86,24 @@ def tot_computations(params: dict, verbose=False):
     return total
 
 
+def write_results(params, results, model_name, num_steps):
+    layers, activation, err_func, lr = params
+    epochs, train_losses, val_losses, accuracies = results
+    with open(f"tuning/{model_name}.txt", 'a') as f:
+        f.write(f"\nLayers: {layers}\n"
+                f"Activation: {activation}\n"
+                f"Error function: {err_func.__name__}\n"
+                f"Learning rate: {lr}\n"
+                f"----------------------------\n"
+                f"Max accuracy: {accuracies.min()}\n"
+                f"Reached at epoch: {epochs[accuracies.argmin()] + 1}/{num_steps}\n"
+                f"Model reference: {model_name}"
+                )
+        # np.save(f"tuning/{model_name}_train_loss.npy", train_losses)
+        # np.save(f"tuning/{model_name}_val_loss.npy", val_losses)
+        # np.save(f"tuning/{model_name}_accuracies.npy", accuracies)
+
+
 def find_best_params(params: dict, num_steps=10_000):
     i = 1
     max_accuracy = {}
@@ -96,45 +113,104 @@ def find_best_params(params: dict, num_steps=10_000):
             layers = np.array([2] + num_hidden * [num_neuron] + [1])
             for activation in params['activation']:
                 PINN = FCN(layers, act=activation)
-                print(PINN)
+                # print(PINN)
+                print("Architecture:", layers, "Activation:", activation)
                 for err_func in params['error_func']:
                     for lr in params['learning_rate']:
-                        training = TrainingPhase(neural_net=PINN, training_points=(X_train_Nu, Y_train_Nu, X_train_Nf),
-                                                 testing_points=(X_val, Y_val), equation=pde_exponential_disc,
-                                                 n_epochs=num_steps,
-                                                 _loss_function=err_func)
-                        print(f"Training model {i}/{tot_computations(params)}")
-                        net, epochs, train_losses, val_losses, accuracies = training.train_model(
-                            optimizer=torch.optim.Adam,
-                            learning_rate=lr)
-                        model_name = random_string(10)
-                        with open(f"tuning/{model_name}.txt", "a") as f:
-                            f.write(f"Layers: {layers}\n"
-                                    f"Activation: {activation}\n"
-                                    f"Error function: {err_func.__name__}\n"
-                                    f"Learning rate: {lr}\n"
-                                    f"----------------------------\n"
-                                    f"Max accuracy: {accuracies.min()}\n"
-                                    f"Reached at epoch: {epochs[accuracies.argmin()]}/{num_steps}\n"
-                                    f"Model reference: {model_name}"
-                                    )
-                            np.save(f"tuning/{model_name}_train_loss.npy", train_losses)
-                            np.save(f"tuning/{model_name}_val_loss.npy", train_losses)
-                            np.save(f"tuning/{model_name}_accuracies.npy", train_losses)
-                            training.save_model(f"tuning/{model_name}_model.pt")
+                        # model_name = random_string(10)
+                        model_name = generate_model_name(activation, num_hidden, num_neuron, err_func, lr)
+                        if not check_model_exists(conn, model_name):
+                            training = TrainingPhase(neural_net=PINN,
+                                                     training_points=(X_train_Nu, Y_train_Nu, X_train_Nf),
+                                                     testing_points=(X_val, Y_val), equation=pde_exponential_disc,
+                                                     n_epochs=num_steps,
+                                                     _loss_function=err_func)
+                            print(f"Training model {i}/{tot_computations(params)}")
+                            net, epochs, train_losses, val_losses, accuracies = training.train_model(
+                                optimizer=torch.optim.Adam,
+                                learning_rate=lr)
 
+                            insert_result(conn, (model_name, float(accuracies.min())))
+                            write_results(params=(layers, activation, err_func, lr),
+                                          results=(epochs, train_losses, val_losses, accuracies),
+                                          model_name=model_name, num_steps=num_steps)
+                            # training.save_model(f"tuning/{model_name}_model.pt")
                             i += 1
                             max_accuracy[model_name] = accuracies.min()
-                            print(f"Relative error of the model: {accuracies.min()} [{accuracies.min(): %}]")
+                            print(f"Relative error of the model for {lr=}: {accuracies.min(): %}")
+                        else:
+                            print(f"[*] Model {model_name} already exists, not training again.")
+    best_model = max(max_accuracy, key=max_accuracy.get)
+    best_accuracy = max_accuracy[best_model]
+    print(f"Max accuracy has been achieved for model {best_model} with a minimum error of {best_accuracy}.")
+
+
+def train_model_with_params(params, num_steps=10_000):
+    """ Single function to train a network. Used to parallelize the code."""
+    num_hidden, num_neuron, activation, err_func, lr = params
+
+    layers = np.array([2] + num_hidden * [num_neuron] + [1])
+    PINN = FCN(layers, act=activation)
+    print("\n\nArchitecture:", layers, "Activation:", activation)
+    model_name = generate_model_name(activation, num_hidden, num_neuron, err_func, lr)
+
+    training = TrainingPhase(neural_net=PINN, training_points=(X_train_Nu, Y_train_Nu, X_train_Nf),
+                             testing_points=(X_val, Y_val), equation=pde_exponential_disc,
+                             n_epochs=num_steps,
+                             _loss_function=err_func)
+    net, epochs, train_losses, val_losses, accuracies = training.train_model(
+        optimizer=torch.optim.Adam,
+        learning_rate=lr)
+
+    write_results(params=(layers, activation, err_func, lr),
+                  results=(epochs, train_losses, val_losses, accuracies),
+                  model_name=model_name, num_steps=num_steps)
+    training.save_model(f"tuning/{model_name}_model.pt")
+    print(f"Relative error of the model for {lr=}: {accuracies.min(): %}")
+    return model_name, accuracies.min()
+
+
+def find_best_params_parallelized(params: dict, num_steps=10_000):
+    max_accuracy = {}
+
+    # Créez une liste de tous les ensembles possibles d'hyperparamètres
+    param_sets = [(num_hidden, num_neuron, activation, err_func, lr)
+                  for num_hidden in params['num_layers']
+                  for num_neuron in params['num_neurons']
+                  for activation in params['activation']
+                  for err_func in params['error_func']
+                  for lr in params['learning_rate']]
+
+    # Utilisez ProcessPoolExecutor pour exécuter les fonctions d'entraînement en parallèle
+    with ProcessPoolExecutor() as executor:
+        results = list(executor.map(train_model_with_params, param_sets))
+
+    # Traitez les résultats et trouvez le meilleur modèle
+    for model_name, accuracy in results:
+        max_accuracy[model_name] = accuracy
 
     best_model = max(max_accuracy, key=max_accuracy.get)
     best_accuracy = max_accuracy[best_model]
-    print(f"Max accuracy has been achieved for model {best_model} with a minimum accuracy of {best_accuracy}.")
+    print(f"Max accuracy has been achieved for model {best_model} with a minimum error of {best_accuracy}.")
 
 
-tot_computations(parameters)
-start = time.time()
-find_best_params(parameters, num_steps=10_000)
-tot_time = time.time() - start
+def main():
+    parameters = {
+        'num_neurons': [32, 64, 128],
+        'num_layers': list(range(1, 7)),
+        'learning_rate': [1e-4, 1e-5, 1e-6],
+        'error_func': [mse],  # , mae, rmse]
+        'activation': [nn.Tanh(), nn.Sigmoid(), nn.SiLU(), nn.LogSigmoid()]
 
-print(f"Pragramm finished in {tot_time} seconds.")
+    }
+
+    tot_computations(parameters, verbose=True)
+    # find_best_params_parallelized(parameters, num_steps=10_000)
+    find_best_params(parameters, num_steps=10_000)
+
+
+if __name__ == '__main__':
+    start = time.time()
+    main()
+    tot_time = time.time() - start
+    print(f"Programm finished in {tot_time} seconds.")
