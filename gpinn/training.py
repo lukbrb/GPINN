@@ -53,12 +53,12 @@ class TrainingPhase:
             scheduler.step(loss_value)
 
             # Compute stats on learning
-            diff = self.Y_val - self.neural_net(self.X_val).detach()
-            precision = np.abs(diff / self.Y_val)
-            loss_value_valid = self.loss_function(diff)
+            # diff = self.Y_val - self.neural_net(self.X_val).detach()
+            # precision = np.abs(diff / self.Y_val)
+            # loss_value_valid = self.loss_function(diff)
 
-            accuracy.append(precision.mean().detach())
-            valid_losses.append(loss_value_valid.item())
+            # accuracy.append(precision.mean().detach())
+            # valid_losses.append(loss_value_valid.item())
             train_losses.append(loss_value.item())
             epochs.append(epoch)
 
