@@ -1,0 +1,166 @@
+\documentclass[a4paper, 11pt, twoside]{report}
+\usepackage[a4paper]{geometry}
+\usepackage{lmodern}
+\usepackage{textcomp}
+\usepackage{url}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{makeidx}
+\usepackage{fancyhdr}
+\usepackage[times]{quotchap}
+\usepackage{tikz}
+\usepackage{multirow}
+\usepackage{version}
+\usepackage{tcolorbox}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{hyperref}
+\usepackage{amsmath, amsfonts}
+\usepackage{apalike}
+\usepackage{mathtools}
+\usepackage{minted}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{rotating}
+%\usepackage[acronym]{glossaries-extra}
+
+\newcommand{\dd}{\mathrm{d}}
+\renewcommand{\L}{\mathcal{L}}
+\renewcommand{\Vec}{\mathbf}
+\newcommand{\mytitle}{Application of Physics-Informed Neural Networks for Galaxy Dynamics}
+\newcommand{\myname}{Lucas Barbier-Goy}
+\newcommand{\mysupervisor}{Prof. Dr. Marco Landoni \& Dr. Fabio Rigamonti}
+\newcommand{\mydate}{May 25\textsuperscript{th}}
+
+\hypersetup{
+    colorlinks=false,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=black,
+    pdftitle={Application of Physics-Informed Neural Networks for Galaxy Dynamics} 
+    }
+
+
+%% Gestione header: no header sulle dispari bianche
+\makeatletter
+\def\cleardoublepage{\clearpage\if@twoside \ifodd\c@page\else%
+    \hbox{}%
+    \thispagestyle{empty}%              % Empty header styles
+    \newpage%
+    \if@twocolumn\hbox{}\newpage\fi\fi\fi}
+\makeatother
+
+
+\makeindex
+\linespread{1.1}
+
+
+
+%% Aggiunge una linea al di sotto di ogni sezione principale
+\usepackage[calcwidth]{titlesec}
+\titleformat{\section}[hang]{\sffamily\bfseries}
+ {\Large\thesection}{12pt}{\Large}[{\titlerule[0.4pt]}]
+
+ %% Gestione header: no header sulle dispari bianche
+\makeatletter
+\def\cleardoublepage{\clearpage\if@twoside \ifodd\c@page\else%
+    \hbox{}%
+    \thispagestyle{empty}%              % Empty header styles
+    \newpage%
+    \if@twocolumn\hbox{}\newpage\fi\fi\fi}
+\makeatother
+
+\begin{document}
+
+% \maketitle
+\include{covers/insubria}
+\include{covers/linneaus}
+\pagenumbering{roman}
+\setcounter{page}{1}
+\setcounter{tocdepth}{2}
+
+%\begin{abstract}
+%Developing efficient and accurate numerical methods to simulate dynamics of physical systems has been an everlasting challenge in computational physics. Physics-Informed Neural Networks are neural networks that encode laws of physics in their structure. Using auto-differentiation, they can solve partial differential equations (PDE) by minimizing the loss function at some points of the domain of interest. The efficiency attained by these networks for solving PDEs place them as ideal solvers for simulating complex systems.
+%\par In this novel work, we take a first step towards simulating galaxy dynamics with PINNs by solving the gravitational Poisson equation. We first verify the capacity of PINNs to solve the gravitational Poisson equation for simple radial density profiles. We then extend the study to a more complex axisymmetric density profile, making the PINN a function of two parameters. Fine-tuning the We show clear advantages of PINNs over regular solvers in terms of efficiency.
+%\end{abstract}
+
+\begin{abstract}
+Developing efficient and accurate numerical methods to simulate dynamics of physical systems has been an everlasting challenge in computational physics. Physics-Informed Neural Networks (PINNs) are neural networks that encode laws of physics into their structure. Utilizing auto-differentiation, they can efficiently solve partial differential equations (PDEs) by minimizing the loss function at certain points within the domain of interest. The remarkable efficiency exhibited by these networks when solving PDEs positions them as ideal solvers for simulating complex systems.
+\par
+In this pioneering work, we take a first step towards simulating galaxy dynamics using PINNs by solving the gravitational Poisson equation. We initially substantiate the capacity of PINNs to solve the gravitational Poisson equation for the simple Hernquist~\cite{hernquist_analytical_1990} radial density profile, and for the parametric Dehnen~\cite{dehnen_family_1993} radial density profile. Following this, we extended our study to encompass a more complex axisymmetric density profile describing a Thick Exponentiel Disk.
+
+The capacity of PINNs to generate comparatively accurate results has been validated with an average error of 1.71\% and 3.75\% respectively for the spherically symmetric Hernquist and Dehnen models. While for the axisymmetric thick exponentiel disk model the PINN demonstrated an average relative error of 0.36\% with a maximum error of just 0.99\% after fine-tuning the PINN's hyperparameters. Although this model typically relies on the two coordinates $R$ and $z$ along with the ratio $\eta$ of the model's scale lengths, the PINN is here trained using a fixed, predetermined value of $\eta$. 
+
+Drawing upon the outcomes of the grid search implemented for the thick exponential disk model, we provide a succinct examination of how the hyperparameters of the PINN impact the relative error. Given the limited quantity of datapoints, we refrain from formulating definitive conclusions, yet we do exhibit certain discernible patterns. Specifically, we demonstrate that the hyperbolic tangent (tanh) activation function consistently outperforms other activation functions in the context of our model. Additionally, it appears that augmenting the depth of the network offers superior error reduction in comparison to increasing its width, reinforcing the importance of architectural considerations in the optimization of Physics-Informed Neural Networks
+
+Our results show clear advantages of PINNs over regular solvers in terms of efficiency. Despite the success of the two-parameter PINN for the thick exponential disk, further work is required to confirm its extension to three dimensions. This pioneering research offers a promising foundation for further developments in the field, and demonstrates the genuine practical utility of PINNs for simulating complex systems such as galaxies.
+\end{abstract}
+
+\newpage
+\section*{Acknowledgment}
+
+I wish to express profound gratitude to my supervisors Marco Landoni and Fabio Rigamonti for presenting me with this  subject, and for their unyielding encouragement, unwavering guidance, and insightful feedback which facilitated my progression and realization of this thesis. I owe a great deal to Marco for his guidance, which helped me stay focused throughout the project. Furthermore, I am indebted to Fabio, whose enthusiasm, interest, and dedication to this work have guided me throughout this study.
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+
+        \pagestyle{fancy}
+        \renewcommand{\chaptermark}[1]{\markboth{#1}{}} 
+        \renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}} 
+        \fancyhf{} % delete current setting for header and footer 
+        \fancyhead[LE,RO]{\bfseries\thepage} 
+        \fancyhead[LO]{\bfseries\rightmark} 
+        \fancyhead[RE]{\bfseries\leftmark} 
+        \renewcommand{\headrulewidth}{0.8pt} 
+        \renewcommand{\footrulewidth}{0pt} 
+        %\renewcommand{\headheight}{13.59999pt}
+        \addtolength{\headheight}{0.5pt} % make space for the rule 
+        \fancypagestyle{plain}{% 
+        \fancyhead{} % get rid of headers on plain pages
+        \fancyfoot[C]{\bfseries \thepage}
+        \renewcommand{\headrulewidth}{0pt} % and the line 
+        } 
+
+        \cleardoublepage{}
+        \pagenumbering{arabic}
+        \setcounter{page}{1}
+\include{chapters/introduction}
+\include{chapters/galactic-dynamics}
+\include{chapters/neural-nets}
+\include{chapters/pinns}
+\include{chapters/application}
+\include{chapters/conclusion}
+
+\appendix 
+\include{appendices/poisson-solution}
+\include{appendices/approx-theorem}
+\include{appendices/latin-hypercube-sampling}
+
+\newpage
+\Large
+\noindent
+\textbf{Declaration of authorship} 
+\vspace{0.5cm}
+\noindent
+\normalsize
+
+I hereby declare that the report submitted is my own unaided work. All direct 
+or indirect sources used are acknowledged as references. I am aware that the 
+Thesis in digital form can be examined for the use of unauthorized aid and in 
+order to determine whether the report as a whole or parts incorporated in it may 
+be deemed as plagiarism. For the comparison of my work with existing sources I 
+agree that it shall be entered in a database where it shall also remain after 
+examination, to enable comparison with future Theses submitted. Further rights 
+of reproduction and usage, however, are not granted here. This paper was not 
+previously presented to another examination board and has not been published.
+
+\bibliographystyle{apalike}
+\bibliography{references}
+%\printglossary[type=\acronymtype]
+\end{document}
