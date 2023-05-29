@@ -164,3 +164,4 @@ notebooks/DiffusionEquation.ipynb
 notebooks/essai_nn.ipynb
 notebooks/essaiPoisson1D.ipynb
 notebooks/Dehnen_PINN.ipynb
+run_dehnen_bis.py
