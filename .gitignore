@@ -161,3 +161,4 @@ cython_debug/
 /tuning
 /notebooks/scaled_exponential-disc.ipynb
 notebooks/DiffusionEquation.ipynb
+notebooks/essai_nn.ipynb
