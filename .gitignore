@@ -163,3 +163,4 @@ cython_debug/
 notebooks/DiffusionEquation.ipynb
 notebooks/essai_nn.ipynb
 notebooks/essaiPoisson1D.ipynb
+notebooks/Dehnen_PINN.ipynb
