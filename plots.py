@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from models.get_models import dehnen
 from gpinn import potentials
-from error_analysis import relative_error, erreur_difference
-from sklearn.metrics import mean_squared_error
+from error_analysis import relative_error
+
 plt.style.use('seaborn-v0_8-darkgrid')
 # print(plt.style.available)
 
@@ -19,10 +19,11 @@ if len(sys.argv) > 1:
 """
 
 
-def plot_loss(n_epoch, loss_values, scale=('linear', 'linear')):
+def plot_loss(n_epoch, loss_values, val_loss, scale=('linear', 'linear')):
     plt.figure()
     plt.title('Loss as a function of iteration')
-    plt.plot(n_epoch, loss_values)
+    plt.plot(n_epoch, loss_values, label="Training Loss")
+    #plt.plot(n_epoch, val_loss, label="Validation Loss")
     plt.xscale(scale[0])
     plt.yscale(scale[1])
     plt.xlabel('Epoch')
@@ -70,7 +71,8 @@ def plot_scatter_s_gamma(s, gamma, diff, title="Relative Difference"):
 def plot_image_s_gamma(s, gamma, diff, title="Relative Difference", cmap='coolwarm'):
     # Création du graphique
     fig, ax = plt.subplots()
-    # Définition des axes
+    # Définition des axes$
+    ax.set_title(f"Average error: {diff.mean():%}")
     ax.set_xlabel(r'$s$')
     ax.set_ylabel(r'$\gamma$')
     # Tracé de l'image continue colorée par la différence relative entre les prédictions NN et le profil analytique
@@ -89,9 +91,10 @@ def plot_image_s_gamma(s, gamma, diff, title="Relative Difference", cmap='coolwa
 
 if __name__ == "__main__":
     # -------- Plot the loss --------------
-    loss = np.load("arrays/loss.npy")
-    epochs = np.load("arrays/epochs.npy")
-    plot_loss(epochs, loss, scale=('linear', 'log'))
+    loss = np.load("arrays/loss_dehnen.npy")
+    val_loss = np.load("arrays/val_loss_dehnen.npy")
+    epochs = np.load("arrays/epochs_dehnen.npy")
+    plot_loss(epochs, loss, val_loss, scale=('linear', 'log'))
 
     # -------- Plot the prediction -----------
     n_subplots = 3
@@ -130,5 +133,5 @@ if __name__ == "__main__":
     dehnen_predicted = np.array(dehnen_predicted)
 
     plot_image_s_gamma(s, gammas, rel_diffs, title='Relative difference')
-    plot_image_s_gamma(s, gammas, dehnen_true, title='Analytical values of Dehnen profile', cmap='viridis')
-    plot_image_s_gamma(s, gammas, rel_diffs, title='Predicted values of Dehnen profile', cmap='viridis')
+    # plot_image_s_gamma(s, gammas, dehnen_true, title='Analytical values of Dehnen profile', cmap='viridis')
+    # plot_image_s_gamma(s, gammas, rel_diffs, title='Predicted values of Dehnen profile', cmap='viridis')
