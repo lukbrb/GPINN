@@ -1,9 +1,13 @@
 import sys
+# import os
+# print(os.getcwd())
+# sys.path.append('../GPINN')
+
 import numpy as np
 import matplotlib.pyplot as plt
 from models.get_models import dehnen
 from gpinn import potentials
-from error_analysis import relative_error
+from utils.metrics import relative_error
 
 plt.style.use('seaborn-v0_8-darkgrid')
 # print(plt.style.available)
@@ -91,9 +95,9 @@ def plot_image_s_gamma(s, gamma, diff, title="Relative Difference", cmap='coolwa
 
 if __name__ == "__main__":
     # -------- Plot the loss --------------
-    loss = np.load("arrays/loss_dehnen.npy")
-    val_loss = np.load("arrays/val_loss_dehnen.npy")
-    epochs = np.load("arrays/epochs_dehnen.npy")
+    loss = np.load("code/arrays/loss_dehnen.npy")
+    val_loss = np.load("code/arrays/val_loss_dehnen.npy")
+    epochs = np.load("code/arrays/epochs_dehnen.npy")
     plot_loss(epochs, loss, val_loss, scale=('linear', 'log'))
 
     # -------- Plot the prediction -----------

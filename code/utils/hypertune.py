@@ -7,9 +7,9 @@ from pyDOE import lhs
 
 from gpinn.network import FCN
 from gpinn.training import TrainingPhase
-from metrics import mse, mae, rmse
-from residuals import pde_exponential_disc
-from utils import (phi_inter, random_string, create_connection, create_table,
+from utils.metrics import mse
+from gpinn.residuals import pde_exponential_disc
+from utils import (phi_inter, create_connection, create_table,
                    insert_result, check_model_exists, generate_model_name)
 
 

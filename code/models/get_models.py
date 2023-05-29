@@ -20,12 +20,12 @@ def load_model(model_file: str) -> network.FCN:
 
 
 def hernquist(s, a=1):
-    model = load_model("models/hernquist.pt")
+    model = load_model("code/models/hernquist.pt")
     return model(s, a)
 
 
 def dehnen(s, gamma, a=1):
-    model = load_model("models/dehnen.pt")
+    model = load_model("code/models/dehnen.pt")
     gamma_tab = np.ones_like(s) * gamma
     input_matrix = np.array([s, gamma_tab]).T
     return model(input_matrix)

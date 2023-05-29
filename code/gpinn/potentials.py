@@ -19,11 +19,15 @@ def hernquist(radius, scale_factor=1):
     return -scale_factor/(radius + scale_factor)
 
 
-def dehnen(radius, gamma, scale_factor=1):
+def dehnen(radius, gamma, scale_factor=1, tensor=True):
     """ Value of the gravitational potential
         in the case of a Dehnen profile
     """
-    if gamma == 2:
-        return np.log(radius / (radius + scale_factor))
     power1 = 2 - gamma
-    return -1 / power1 * (1 - (radius / (radius + scale_factor)) ** power1)
+    if tensor:
+        return -1 / power1 * (1 - (radius / (radius + scale_factor)) ** power1)
+    else:
+        if gamma == 2:
+            return np.log(radius / (radius + scale_factor))
+
+        return -1 / power1 * (1 - (radius / (radius + scale_factor)) ** power1)

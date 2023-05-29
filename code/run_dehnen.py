@@ -5,44 +5,10 @@ from pyDOE import lhs
 
 from gpinn.network import FCN
 from gpinn.training import TrainingPhase
-
+from gpinn.potentials import dehnen
+from gpinn.residuals import pde_dehnen
+from utils.metrics import mae
 plt.style.use('seaborn-v0_8-darkgrid')
-
-
-def dehnen(radius, _gamma, scale_factor=1):
-    """ Value of the gravitational potential
-        in the case of a Dehnen profile
-    """
-    # if gamma == 2:
-    # return np.log(radius / (radius + scale_factor))
-    power1 = 2 - _gamma
-    return (-1 / power1) * (1 - (radius / (radius + scale_factor)) ** power1)
-
-
-def pde_residual(nn, x_pde):
-    _x, _gamma = x_pde[:, 0].unsqueeze(1), x_pde[:, 1].unsqueeze(1)
-    x_pde.requires_grad = True  # Enable differentiation
-    f = nn(x_pde)
-    f_x = torch.autograd.grad(f, x_pde, torch.ones(x_pde.shape[0], 1),
-                              retain_graph=True, create_graph=True)[0]
-
-    f_x = f_x[:, 0].unsqueeze(1)
-    func = f_x * _x ** 2
-    f_xx = torch.autograd.grad(func, x_pde, torch.ones(x_pde.shape[0], 1),
-                               retain_graph=True, create_graph=True)[0]
-    _gamma = x_pde[:, 1].unsqueeze(1)
-    y_true = (2 * x_pde[:, 0].unsqueeze(1) ** (2 - _gamma)) / (x_pde[:, 0].unsqueeze(1) + 1) ** (4 - _gamma)
-    return f_xx - y_true
-
-
-def mse(y_true: torch.Tensor, y_pred: torch.Tensor):
-    diff = y_pred - y_true
-    return diff.pow(2).mean()
-
-
-def mae(array: torch.Tensor):
-    return torch.abs(array).mean()
-
 
 # ========================= PARAMETERS =========================
 steps = 10_000
@@ -127,13 +93,10 @@ PINN = FCN(layers) #, act=torch.nn.SiLU())
 print(PINN)
 
 training = TrainingPhase(neural_net=PINN, training_points=(X_train_Nu, Y_train_Nu, X_train_Nf),
-                         testing_points=(X_test, Y_test), equation=pde_residual, n_epochs=steps, _loss_function=mae)
+                         testing_points=(X_test, Y_test), equation=pde_dehnen, n_epochs=steps, _loss_function=mae)
 
 net, epochs, losses, _, _ = training.train_model(optimizer=torch.optim.Adam, learning_rate=1e-3)
 torch.save(net.state_dict(), 'test.pth')
-np.save("arrays/loss_dehnen.npy", losses)
-np.save("arrays/epochs_dehnen.npy", epochs)
-training.save_model("models/dehnen.pt")
-
-# TODO: Changer la dérivée pour qu'elle ne soit qu'en fonction de x
-# TODO: Ajouter erreur de validation pendant l'entraînement
+np.save("code/arrays/loss_dehnen.npy", losses)
+np.save("code/arrays/epochs_dehnen.npy", epochs)
+training.save_model("code/models/dehnen.pt")

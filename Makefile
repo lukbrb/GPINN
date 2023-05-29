@@ -1,12 +1,12 @@
 dehnen:
-	@python3 run_dehnen.py
+	@python3 code/run_dehnen.py
 
 expdisc:
-	@python3 run_disc.py
+	@python3 code/run_disc.py
 test:
 	@echo "test suite is not implemented yet"
 
 PLOTSAVED = True
 
 plots:
-	@python3 plots.py $(PLOTSAVED)
+	@python3 code/plots.py $(PLOTSAVED)

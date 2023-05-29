@@ -5,9 +5,9 @@ from pyDOE import lhs
 
 from gpinn.network import FCN
 from gpinn.training import TrainingPhase
-from metrics import mse, rmse, mae
-from residuals import pde_exponential_disc
-from utils import phi_inter, load_data
+from utils.metrics import mse
+from gpinn.residuals import pde_exponential_disc
+from utils.interpolate import phi_inter, load_data
 
 Rd = 4
 eta = 0.2
@@ -96,9 +96,9 @@ training = TrainingPhase(neural_net=PINN, training_points=(X_train_Nu, Y_train_N
 
 net, epochs, train_losses, val_losses, accuracies = training.train_model(optimizer=torch.optim.Adam, learning_rate=1e-5)
 
-np.save("arrays/loss_disc.npy", train_losses)
-np.save("arrays/epochs_disc.npy", epochs)
-training.save_model("models/exp_disc.pt")
+np.save("code/arrays/loss_disc.npy", train_losses)
+np.save("code/arrays/epochs_disc.npy", epochs)
+training.save_model("code/models/exp_disc.pt")
 
 plt.figure()
 plt.title('Training loss')
