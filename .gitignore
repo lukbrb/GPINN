@@ -162,3 +162,4 @@ cython_debug/
 /notebooks/scaled_exponential-disc.ipynb
 notebooks/DiffusionEquation.ipynb
 notebooks/essai_nn.ipynb
+notebooks/essaiPoisson1D.ipynb
