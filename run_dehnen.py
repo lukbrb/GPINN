@@ -20,28 +20,24 @@ def dehnen(radius, _gamma, scale_factor=1):
 
 
 def pde_residual(nn, x_pde):
-    _x, _gamma = torch.split(x_pde, 1, dim=1)
-
+    _x, _gamma = x_pde[:, 0].unsqueeze(1), x_pde[:, 1].unsqueeze(1)
     x_pde.requires_grad = True  # Enable differentiation
     f = nn(x_pde)
-    f_x_gamma = torch.autograd.grad(f, x_pde, torch.ones(x_pde.shape[0], 1),
-                                    retain_graph=True, create_graph=True)[0]
+    f_x = torch.autograd.grad(f, x_pde, torch.ones(x_pde.shape[0], 1),
+                              retain_graph=True, create_graph=True)[0]
 
-    f_x = f_x_gamma[:, 0].unsqueeze(1)
+    f_x = f_x[:, 0].unsqueeze(1)
     func = f_x * _x ** 2
-    f_xx_gamma = torch.autograd.grad(func, x_pde, torch.ones(x_pde.shape[0], 1),
-                                     retain_graph=True, create_graph=True)[0]
-    f_xx = f_xx_gamma[:, 0].unsqueeze(1)
-    y_true = (2 * _x ** (2 - _gamma)) / (_x + 1) ** (4 - _gamma)
+    f_xx = torch.autograd.grad(func, x_pde, torch.ones(x_pde.shape[0], 1),
+                               retain_graph=True, create_graph=True)[0]
+    _gamma = x_pde[:, 1].unsqueeze(1)
+    y_true = (2 * x_pde[:, 0].unsqueeze(1) ** (2 - _gamma)) / (x_pde[:, 0].unsqueeze(1) + 1) ** (4 - _gamma)
     return f_xx - y_true
 
 
-def mse(residual: torch.Tensor):
-    return residual.pow(2).mean()
-
-
-def rmse(residual: torch.Tensor):
-    return torch.sqrt(residual.pow(2).mean())
+def mse(y_true: torch.Tensor, y_pred: torch.Tensor):
+    diff = y_pred - y_true
+    return diff.pow(2).mean()
 
 
 def mae(array: torch.Tensor):
@@ -51,7 +47,7 @@ def mae(array: torch.Tensor):
 # ========================= PARAMETERS =========================
 steps = 10_000
 
-layers = np.array([2, 32, 32, 32, 32, 1])
+layers = np.array([2, 32, 16, 1])
 
 # To generate new data:
 x_min = 1e-2
@@ -59,9 +55,9 @@ x_max = 10
 gamma_min = 0
 gamma_max = 2.99
 total_points_x = 300
-total_points_gamma = 100
+total_points_gamma = 10
 # Nu: Number of training points # Nf: Number of collocation points (Evaluate PDE)
-Nu = 500
+Nu = 10
 Nf = 1024
 # ========================= DATA GENERATION =========================
 
@@ -102,14 +98,14 @@ X_train = torch.vstack([left_X, bottom_X, top_X, right_X])
 Y_train = torch.vstack([left_Y, bottom_Y, top_Y, right_Y])
 # Choose(Nu) points of our available training data:
 idx = np.random.choice(X_train.shape[0], Nu, replace=False)
-X_train_Nu = X_train[idx, :]
-Y_train_Nu = Y_train[idx, :]
+X_train_Nu = X_train  # [idx, :]
+Y_train_Nu = Y_train  # [idx, :]
 # Collocation Points (Evaluate our PDe)
 
 
 # Choose(Nf) points(Latin hypercube)
 X_train_Nf = lb + (ub - lb) * lhs(2, Nf)  # 2 as the inputs are x and gamma
-# X_train_Nf = torch.vstack((X_train_Nf, X_train_Nu))  # Add the training points to the collocation point
+X_train_Nf = torch.vstack((X_train_Nf, X_train_Nu))  # Add the training points to the collocation point
 
 # f_hat = torch.zeros(X_train_Nf.shape[0], 1)  # to minimize function
 plt.figure()
@@ -126,19 +122,18 @@ X_test = x_test.float()  # the input dataset (complete)
 Y_test = y_test.float()  # the real solution
 
 # Create Model
-PINN = FCN(layers)  # , act=torch.nn.SiLU())
+PINN = FCN(layers) #, act=torch.nn.SiLU())
 
 print(PINN)
 
 training = TrainingPhase(neural_net=PINN, training_points=(X_train_Nu, Y_train_Nu, X_train_Nf),
-                         testing_points=(X_test, Y_test), equation=pde_residual, n_epochs=steps,
-                         optimizer=torch.optim.Adam,
-                         _loss_function=mae)
+                         testing_points=(X_test, Y_test), equation=pde_residual, n_epochs=steps, _loss_function=mae)
 
-net, epochs, losses = training.train_model()
-# torch.save(net.state_dict(), 'test.pth')
-np.save("arrays/loss.npy", losses)
-np.save("arrays/epochs.npy", epochs)
+net, epochs, losses, _, _ = training.train_model(optimizer=torch.optim.Adam, learning_rate=1e-3)
+torch.save(net.state_dict(), 'test.pth')
+np.save("arrays/loss_dehnen.npy", losses)
+np.save("arrays/epochs_dehnen.npy", epochs)
 training.save_model("models/dehnen.pt")
 
+# TODO: Changer la dérivée pour qu'elle ne soit qu'en fonction de x
 # TODO: Ajouter erreur de validation pendant l'entraînement
