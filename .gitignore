@@ -160,3 +160,4 @@ cython_debug/
 /brouillons
 /tuning
 /notebooks/scaled_exponential-disc.ipynb
+notebooks/DiffusionEquation.ipynb
