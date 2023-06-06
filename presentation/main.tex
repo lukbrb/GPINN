@@ -1,0 +1,100 @@
+\documentclass[12pt, aspectratio=169]{beamer}
+\usepackage{hyperref}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{amsmath, amsfonts}
+\usepackage{apalike}
+\usepackage{mathtools}
+\usepackage[utf8]{inputenc}
+\usepackage{subcaption}
+\usepackage{tikz}
+% --------------- Commandes ------------------
+\newcommand{\dd}{\mathrm{d}}
+\renewcommand{\L}{\mathcal{L}}
+\renewcommand{\Vec}{\mathbf}
+\newcommand{\moit}{0.5\textwidth}
+% ---------------- Réglages ----------------
+\hypersetup{
+    colorlinks=false,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=black,
+    pdftitle={Application of Physics-Informed Neural Networks for Galaxy Dynamics} 
+    }
+
+\usetheme{Copenhagen}
+\usecolortheme{beaver}
+%\setbeamertemplate{navigation symbols}{} % cache boutons de navigation
+\setbeamercovered{transparent}
+\setbeamertemplate{headline}{} % cache sections en haut des diapos
+\title{Application of Physics-Informed Neural Networks for Galaxy Dynamics}
+\author{Lucas Barbier-Goy}
+\date{June 5\textsuperscript{th} 2023}
+
+
+% ---------------- Document ------------------
+\begin{document}
+
+\maketitle
+
+
+
+\begin{frame}{Purpose}
+    We aim to use PINNS for galaxy modelization. That is, after specifying all free parameters, the computation of:
+    \begin{itemize}
+        \item the surface brightness
+        \item the line of sight velocity
+        \item the line of sight velocity dispersion (the statistical dispersion of velocities about the mean velocity)
+    \end{itemize}
+    The solution of the Jeans equations (i.e. the velocity field) once projected along the line of sight can be directly compared to observational data. We take a first step by solving the Poisson equation for the gravitational potential $\Phi$ :
+    $$ \nabla \Phi = 4 \pi G \rho $$
+\end{frame}
+
+\begin{frame}{Introduction}
+    \tableofcontents
+\end{frame}
+
+%\begin{frame}{Intrdoduction}
+%\begin{itemize}
+%    \item Problématique
+%    \item PINNs et NN
+%    \item Applications
+%    \item Résultats
+%    \end{itemize}
+%\end{frame}
+
+%\begin{frame}{Exemple}
+%    \begin{itemize}
+%        \item <1-> Diapo 1
+%        \item <2-> Diapo 2
+%    \end{itemize}
+%\only<2>{Seulement sur la seconde diapo}\only<1>{Seulement 1ere diapo}
+%\end{frame}
+
+%\section{Section 2}
+%\begin{frame}{duo-colonne}
+%    \begin{columns}
+%        \column{0.5\textwidth} Colonne 1
+%        \column{0.5 \textwidth} Colonne 2
+%    \end{columns}
+%\end{frame}
+
+%\include{chapters/introduction}
+%\include{chapters/galactic-dynamics}
+\include{sections/neural-nets}
+\include{sections/pinns}
+\include{sections/application}
+%include{chapters/conclusion}
+
+\begin{frame}{Future Works}
+    \begin{itemize}
+        \item Jeans equations
+        \item Influence of hyperparameters
+        \item Theory and interpretability
+        \item Inverse problem for parameters estimation
+    \end{itemize}
+\end{frame}
+\bibliographystyle{apalike}
+\bibliography{references}
+
+\end{document}
