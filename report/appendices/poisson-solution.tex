@@ -1,1 +1,98 @@
 \chapter{Solving the Poisson equation}\label{app:poisson}
+
+We demonstrate here a way to solve Equation~\eqref{eq:residual_poisson_hernquist1}. We recall its expression:
+
+\begin{equation}
+    \label{eq:app-hernquist-diff-init}
+    \dfrac{\dd}{\dd s}\left(s^2 \dfrac{\dd \Phi'}{\dd s}\right) = \dfrac{2s}{(s+1)^3}
+\end{equation}
+
+This equation can be integrated on both sides, such that~\eqref{eq:app-hernquist-diff-init} transforms into:
+
+\begin{equation}
+    \label{eq:app-hernquist-integral-1}
+    \int \dd \left(s^2 \dfrac{\dd \Phi'}{\dd s}\right) = \int \dfrac{2s}{(s+1)^3} \dd s
+\end{equation}
+
+The integral on the right hand side (rhs) can be rewritten as follows:
+
+\begin{equation}
+    \label{eq:app-hernquist-rhs-integral-1}
+    \int \dfrac{2s}{(s+1)^3} \dd s = \int \dfrac{2 (s + 1 -1)}{(s+1)^3} \dd s = \int \dfrac{2}{(s+1)^2} \dd s  - \int \dfrac{2}{(s+1)^3} \dd s 
+\end{equation}
+
+The integral~\eqref{eq:app-hernquist-rhs-integral-1} is straightforward to compute. Equation~\eqref{eq:app-hernquist-integral-1} therefore yields:
+
+\begin{equation}
+    \label{eq:app-hernquist-sol-integral-step1}
+     \dfrac{\dd \Phi'}{\dd s} = \dfrac{1}{s^2(s+1)^2} -  \dfrac{2}{s^2(s+1)} + K_1\text{ , }
+\end{equation} where $K_1$ is an integration constant, and both sides have been divided by $s^2$.
+
+We use the technique of integration by partial fractions to solve Equation~\eqref{eq:app-hernquist-sol-integral-step1}. That is, we rewrite the first and second terms of the rhs as:
+
+\begin{equation}
+    \label{eq:app-ipf-term-1}
+    \dfrac{1}{s^2(s+1)^2} = \frac{A_1}{s} + \frac{B_1}{s^2} + \frac{C_1}{s+1} + \frac{D_1}{(s+1)^2}
+\end{equation} and 
+
+\begin{equation}
+    \label{eq:app-ipf-term-2}
+    \dfrac{1}{s^2(s+1)} = \frac{A_2}{s} + \frac{B_2}{s^2} + \frac{C_2}{s+1}\text{ .}
+\end{equation}
+
+In order to find the parameters $A_1$, $B_1$, $C_1$ and $D_1$, we first rewrite~\eqref{eq:app-ipf-term-1} as follows:
+\begin{equation}
+    \label{eq:app-ipf-term-1-unit}
+    1 = A_1 s(s+1)^2 + B_1 (s+1)^2 + C_1 s^2 (s+1) + D_1 s^2\text{ , }
+\end{equation} and then evaluate this expression at some specific points allowing to isolate one parameter. For example, at $s=0$ one can find that $B_1=1$, and at $s=-1$ that $D_1=1$. Substituting these values of $B_1$ and $D_1$ into~\eqref{eq:app-ipf-term-1-unit} yields:
+
+\begin{equation}
+    \label{eq:app-ipf-term-1-AC}
+     1 = A_1 s(s+1)^2 + (s+1)^2 + C_1 s^2 (s+1) + s^2
+\end{equation} Evaluating~\eqref{eq:app-ipf-term-1-AC} at $s=1$ gives:
+
+\begin{align}
+    1 &= 4A_1 + 4 + 2C_1 + 1 \nonumber\\
+    \Rightarrow C_1 &= -2(A_1+1) 
+\end{align} Finally, substituting the value of $C_1$ into~\eqref{eq:app-ipf-term-1-AC} and evaluating the resulting expression at $s=2$ permits to obtain $A_1=-2$ and $C_1=2$. Therefore, Equation~\eqref{eq:app-ipf-term-1} can be fully expressed as:
+
+\begin{equation}
+    \label{eq:app-ipf-term-1-final}
+    \dfrac{1}{s^2(s+1)^2} = -\frac{2}{s} + \frac{1}{s^2} + \frac{2}{s+1} + \frac{1}{(s+1)^2}
+\end{equation} Following similar steps for Equation~\eqref{eq:app-ipf-term-2}, it is easy to show that it can be written as:
+
+\begin{equation}
+    \label{eq:app-ipf-term-2-final}
+    \dfrac{1}{s^2(s+1)} = -\frac{1}{s} + \frac{1}{s^2} + \frac{1}{s+1}\text{ .}
+\end{equation} Coming back to Equation~\eqref{eq:app-hernquist-sol-integral-step1}, the rhs is now straight forward to compute. Respectively for the first and second terms of the rhs, we get:
+
+\begin{align}
+        \label{eq:app-hernquist-rhs-term-1-final}
+        \int \dfrac{1}{s^2(s+1)^2} \dd s &=  \int \left( -\frac{2}{s} + \frac{1}{s^2} + \frac{2}{s+1} + \frac{1}{(s+1)^2} \right) \dd s \nonumber \\ 
+        &= -2\ln{s} + \frac{2}{s} - 2\ln{(s+1)} - \frac{1}{s+1}
+\end{align} and
+
+\begin{align}
+        \label{eq:app-hernquist-rhs-term-2-final}
+        -2\int  \dfrac{1}{s^2(s+1)} \dd s &=  \int \left( \frac{2}{s} - \frac{2}{s^2} + \frac{2}{s+1} \right) \dd s \nonumber \\ 
+        &=  2\ln{s} + \frac{2}{r} - 2\ln{(s+1)}
+\end{align} Putting everything together, i.e. summing~\eqref{eq:app-hernquist-rhs-term-1-final} and~\eqref{eq:app-hernquist-rhs-term-2-final}, and evaluating the integral of the left hand side of~\eqref{eq:app-hernquist-sol-integral-step1}, we get the solution of Equation~\eqref{eq:app-hernquist-sol-integral-step1} as:
+
+\begin{equation}
+    \label{eq:app-hernquist-sol-pot}
+    \Phi' = \frac{1}{s} - \frac{1}{s+1} - \frac{K_1}{s} + K_2
+\end{equation}
+
+Boundary conditions have to be used to determine the integration constants $K_1$ and $K_2$. The potential $\Phi'$ does not diverge at $s=0$, therefore the terms in $1/s$ have to cancel out, constraining $K_1=1$. Furthermore, at $s \to \infty$ the potential vanishes for an isolated system. The constant $K_2$ is therefore constrained such that:
+
+\begin{equation}
+    \label{eq:app-boundary-const-K2}
+    \lim_{s \to \infty} \Phi'(s)=0 \Rightarrow \lim_{s \to \infty} -\frac{1}{1 + s} + K_2 = 0 \Rightarrow K_2 =0
+\end{equation}
+
+Finally, substituting the values of $K_1$ and $K_2$ in~\eqref{eq:app-hernquist-sol-pot}, the solution of Equation~\eqref{eq:app-hernquist-diff-init} is 
+
+\begin{equation}
+    \label{eq:app-hernquist-solution}
+    \boxed{\Phi' = - \frac{1}{s+1}}
+\end{equation}

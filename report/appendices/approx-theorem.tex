@@ -1,1 +1,62 @@
 \chapter{The Universal Approximation Theorem}\label{app:approx-theorem}
+
+There are several proofs for the Universal Approximation Theorem. The one we choose to present here was proposed by Cybenko~\cite{cybenko1989}. An alternative proof can be found in~\cite{hornik1991approximation}, especially for Theorems 2.1 and 2.4 of that paper. While it was mentioned in Section~\ref{sec:univ-approx} that the results by Cybenko~\cite{cybenko1989} are for the specific case of sigmoid activation functions, the result of Theorem 1 of~\cite{cybenko1989} is actually general and applicable for any continuous discriminatory activation function. A discriminatory function is defined as a function of a set of variables that is computed for samples of events or objects to help distinguish or classify them.
+
+Here is Theorem 1 of~\cite{cybenko1989}:
+
+\begin{theorem}
+\label{th:univ-theorem}
+     Let $\sigma$ be any continuous discriminatory function. Then finite sums of the form
+        \begin{equation}
+        \label{eq:app-univ-approx-th}
+            G(x) = \sum_{j=1}^{N} \alpha_j \sigma \left( y_j^T x + \theta \right)
+        \end{equation}
+    are dense in $C(I_n)$. In other words, given any $f \in C(I_n)$ and $\epsilon > 0$, there is a sum, $G(x)$, of the above form, for which $\left| G(x) - f(x)\right| < \epsilon $ for all $x \in I_n$.
+\end{theorem}
+
+Here, $I_n$ represents the $n$-dimensional unit cube $[0, 1]^n$ and $C(I_n)$ is the space of continuous functions on $I_n$. For the parameters in Equation~\eqref{eq:app-univ-approx-th}, we have $\alpha_j \text{, } \theta \in \mathbb{R}$ and $\Vec{y}_j \in \mathbb{R}^n$.
+We list some definitions and theorems that might prove useful for the understanding of the proof of Theorem~\ref{th:univ-theorem}.
+\begin{definition}
+\label{def:fct-discriminatoire}
+A function $\sigma$ is said to be discriminatory if for a measure $\mu \in M(I_n)$, where $M(I_n)$ is the space of finite, signed regular Borel measures on $I_n$, we have:
+\begin{equation*}
+\int_{I_n} \sigma \left( y_j^T x + \theta \right) \dd \mu(x) = 0
+\end{equation*}
+$\forall \Vec{y} \in \mathbb{R}^n$ and $\theta \in \mathbb{R}$.
+\end{definition}
+\begin{definition}
+The closure of a space $S$ is the union of $S$ with its boundaries. One can imagine the closure of $S$ as all the points that are either in $S$, or very close to $S$. Formally, if we define a metric space $(E, d)$, where $d$ is the metric, then $x$ is a point of closure of $S$ if the distance
+\begin{equation}
+\label{eq:app-distance-closure}
+d(E, s) = \inf_{s \in S} d(E, s)=0\text{ , }
+\end{equation}
+where $\inf$ is the infimum, or greatest lower bound. The set $S$ is closed if and only if $S = \overline{S}$, where $\overline{S}$ is the closure of $S$.
+\end{definition}
+
+\begin{theorem}
+Let $(E,d)$ be a metric space and $F$ a part of $E$. $F$ is closed if, and only if, for any sequence $(x_n)$ of elements of $F$ that converges to an element $\ell$ of $E$, then $\ell$ belongs to $F$ (in other words, all converging sequences of $F$ have their limit within $F$).
+\end{theorem}
+
+We provide here a somewhat simplified definition of the Hahn-Banach theorem, used in the proof of Theorem~\ref{th:univ-theorem}.
+
+\begin{theorem}
+\label{th:HB}
+The Hahn-Banach theorem states that if $E$ is a proper subspace of a Banach space (a complete normed vector space, such as $C(I_n)$), then there exists a linear functional defined on the entire space that is nonzero, except on this proper subspace.
+\end{theorem}
+
+\subsubsection{Proof}
+
+The proof given by Cybenko~\cite{cybenko1989} employs a proof by contradiction. Firstly, we denote by $S \subset C(I_n)$ the set of functions of the form $G(x)$ as in equation~\eqref{eq:app-univ-approx-th}. Clearly, $S$ is a linear subspace of $C(I_n)$, which means that for $G_1\text{, }G_2 \in S$ and $\lambda \in \mathbb{R}$, we have $G_1 (x) + G_2(x) \in S$ and $G(\lambda x) = \lambda G(x)$. We want to show that the closure of $S$ is the entire space $C(I_n)$.
+
+\par Here begins the proof by contradiction. Let us assume that the closure of $S$ is not all of $C(I_n)$. Then this closure of $S$, let's call it $R$, is a closed subspace of $C(I_n)$. By the Hahn-Banach theorem (Theorem~\ref{th:HB}), we infer that there exists a non-bounded linear functional $L$ on $C(I_n)$ such that $L \neq 0$ but $L(R)=L(S)=0$. Finally, by the Fréchet-Riesz representation theorem, the functional $L$ is of the form:
+
+\begin{equation}
+\label{eq:app-integral-FR}
+L(h) = \int_{I_n} h(x) \dd\mu(x)
+\end{equation} for some $\mu \in M(I_n)$ and for all $h \in C(I_n)$. In particular, since $\sigma \left( y_j^T x + \theta \right)$ is in $R$ for all $y$ and $\theta$, we must have according to equation~\eqref{eq:app-integral-FR}
+
+\begin{equation}
+\label{eq:fin-preuve-univ-th}
+\int_{I_n} \sigma \left( y_j^T x + \theta \right) \dd \mu(x) = 0
+\end{equation}
+However, we assumed $\sigma$ to be discriminatory, which according to Definition~\ref{def:fct-discriminatoire} implies that $\mu=0$ in Equation~\eqref{eq:fin-preuve-univ-th}. This contradicts the initial assumption that $L\neq 0$. Therefore, the subspace $S$ must be dense in $C(I_n)$, that is, the functions $G(x)$ defined by equation~\eqref{eq:app-univ-approx-th} are dense in $C(I_n)$. In other words, given $\sigma$ continuous and discriminatory, the functions $G(x)$ can arbitrarily precisely approximate any continuous function on $I_n$.

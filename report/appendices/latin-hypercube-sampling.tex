@@ -1,1 +1,18 @@
 \chapter{Latin Hypercube Sampling}\label{app:lhs}
+
+The Latin Hypercube Sampling~\cite{eglajs1977new,mckay1979comparison} is a statistical method that allows the generation of a sample of near-random parameter values from a multidimensional probability distribution. 
+
+This method ensures that each sample is uniquely positioned within a multidimensional space, such that no two samples share the same position along any dimension. This is achieved by carefully placing each new sample based on the positions of those already placed, so that no common coordinates are shared within the multidimensional space.
+
+The algorithm can be summarized as follows:
+
+\begin{enumerate}
+    \item Set a number of points $N$ to sample, as well as the dimension $d$ of the space.
+    \item Divide each dimension into $N$ equal probable intervals.
+    \item Construct the point $x_k = (x_k^1, x_k^2, \dots, x_k^d)$ with $k \in \{0, 1, \dots , N-1\}$
+    and where $$x_k^j = \frac{\pi_j(k) - u_k^j}{N}$$ $\pi_j(k)$ is the cell selected on the axis of the $j^{\text{th}}$ dimension for point $k$, and $u_k^j$ is the position of the point within this cell.
+    \item Repeat the previous step $N$ times; until all points are selected.
+    \item Return a $N \times d$ matrix containing the coordinates of all points sampled from the hypercube.
+\end{enumerate}
+
+This algorithm ensures a well-distributed sampling of the space, where each sample provides unique information, thereby reducing the total number of simulations required and ensuring that the entire space is more uniformly explored.

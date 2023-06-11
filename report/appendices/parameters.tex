@@ -1,0 +1,29 @@
+\chapter{Network's Parameters}\label{app:num-parameters}
+
+As the complexity of a neural network grows, i.e. the number of neurons and layers, the total number of parameters might grow rapidly. Having in mind the total number of parameters of the neural network we work with might prove useful in many circumstances. We provide here a quick solution to compute the number of parameters.
+
+
+For a fully connected neural network, the total number of parameters is the sum of the parameters in each layer.
+Let us consider a network with $L$ layers, where each layer $l$ has $n_{(l)}$ neurons, and each neuron is connected to all neurons in the previous layer. Therefore, layer $l$ has $n_{(l-1)} \times n_{(l)}$ weights, and also $n_{(l)}$ biases.
+
+The total number of parameters $P$ in the network is given by:
+
+\begin{equation}
+    \label{eq:app-total-params-formula}
+    P = \sum_{l=1}^{L} [n_{(l-1)} \times n_{(l)} + n_{(l)}]
+\end{equation}
+
+In practice, the number of parameters can be computed using the following function:
+
+\begin{minted}{Python}
+    def count_parameters(model): 
+        return sum(p.numel() for p in model.parameters() if p.requires_grad) 
+\end{minted} 
+for a model built with PyTorch. As an example, let us compute the number of parameters for the network used in Section~\ref{sec:disk}, for the thick exponential disk. The network has one input layers with two neurons, one to represent $R'$ and the other to represent $z'$, six hidden layers of 128 neurons each, and one output layer. The latter has only one neuron, representing the gravitational potential. Therefore, using formula~\eqref{eq:app-total-params-formula}, we get that 
+
+\begin{align*}
+    P &= (2 \times 128 + 128) + 6 \times (128 \times 128 + 128) + (128 \times 1 + 1)\\
+    &= 384 + 6 \times 16512 + 129 = 99585
+\end{align*}
+    
+The network used has roughly $10^5$ parameters. Although it might seem to be a huge number of parameters, we shall note that actual models such as GPT-3.5 or AlphaFold~\cite{jumper2021highly} have respectively 170 billions and 21 millions parameters. The number of neurons in the human brain is estimated to be of the order of 86 billions~\cite{herculano2009human}. Each neuron has, on average, about $7,000$ synaptic connections with other neurons. That puts the synapse count in the neighborhood of $600$ trillion\footnote{The trillion used here is the short-scale trillion, $10^{12}$, used in American and British English. This would be a billion in other countries.}. New models are expected to also have around a few hundred trillion of parameters.
