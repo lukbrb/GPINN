@@ -1,13 +1,13 @@
 \chapter{Neural Networks}\label{ch:neural-networks}
-The history of neural networks can be traced back to the inception of the perceptron in 1957 by Frank Rosenblatt, a psychologist and computer scientist~\cite{rosenblatt1958perceptron}. The perceptron was a foundational model inspired by the functioning of neurons in the human brain, providing a mathematical model that enabled machines to learn from data and make predictions. It was conceptualised as a binary linear classifier, taking a set of input signals and generating an output based on the combined weighted inputs. However, the perceptron was constrained by its limitations; it could only solve linear problems.
+The history of neural networks can be traced back to the inception of the perceptron in 1957 by Frank Rosenblatt, a psychologist and computer scientist~\cite{rosenblatt1958perceptron}. The perceptron was a foundational model inspired by the functioning of neurons in the human brain, providing a mathematical model that enabled machines to learn from data and make predictions. It was conceptualized as a binary linear classifier, taking a set of input signals and generating an output based on the combined weighted inputs. However, the perceptron was constrained by its limitations; it could only solve linear problems.
 \par The resurgence of neural networks started in the 1980s when the backpropagation algorithm was popularized (see Section~\ref{sec:backprop}). This algorithm, combined with the use of gradient descent~(\ref{subsec:gradient-descent}), allows the adjustment of weights in a multi-layer perceptron to minimize the prediction error~\cite{rumelhart1986learning}. This significant leap forward led to the development of deep learning, in which neural networks with many layers could be trained, leading to more sophisticated and accurate models.
 \par The 2000s brought a further rise in the use of neural networks, primarily due to advances in hardware, particularly the use of Graphics Processing Units (GPUs) for training, and the availability of big data~\cite{schmidhuber2015deep}. As a result, neural networks, specifically deep learning, have become the cornerstone of modern artificial intelligence applications, from computer vision to natural language processing. There exist different kind of neural networks, such as convolutional neural networks~\cite{lecun1995convolutional}, popular for computer vision. In this section we focus on Fully Connected Feed-Forward Neural Networks. 
 \section{Description}
-A basic feedforward neural network (FFNN), also known as a multi-layer perceptron, consists of three main components: an input layer, hidden layers, and an output layer. Each layer comprises nodes (or neurons), and each node in a layer is connected to every node in the subsequent layer through connections called weights.
+A basic feed-forward neural network (FFNN), also known as a multi-layer perceptron, consists of three main components: an input layer, hidden layers, and an output layer. Each layer comprises nodes (or neurons), and each node in a layer is connected to every node in the subsequent layer through connections called weights.
 
 The data initially enters the network through the input layer. This data then propagates forward through the hidden layers. The intermediate layers are called hidden layers because their outputs are not directly observed. In each hidden layer, the nodes receive inputs from the preceding layer, apply a weighted sum to these inputs, add a bias, and then pass the result through an activation function. The role of the activation function is to introduce non-linearity into the network, allowing it to learn and represent more complex relationships in the data.
 
-This process continues until the output layer is reached. The output layer generates the final output of the network, which is then used for making predictions. The goal of training a neural network is to adjust the weights and biases to minimise the difference between the network's predictions and the actual values, a process typically accomplished through backpropagation and gradient descent, which we introduce in the following sections.
+This process continues until the output layer is reached. The output layer generates the final output of the network, which is then used for making predictions. The goal of training a neural network is to adjust the weights and biases to minimize the difference between the network's predictions and the actual values, a process typically accomplished through backpropagation and gradient descent, which we introduce in the following sections.
 
 
 
@@ -157,7 +157,7 @@ g(\Vec{x}) = \mathbf{W}^{(L)} \cdot \Vec{x} + \Vec{b}^{(L)}
 \end{equation}
 
 
-We have formally described a forward pass of a Feedforward Neural Network for input data $\Vec{x}$, given weights $w$ and biases $b$. These latter elements, which we will denote as $\theta$, can be initialized in various ways. We do not wish to delve into these details here and we just consider random initialization. Once initialized, we aim to adjust these weights and biases so that the function $\hat{f}(\Vec{x})$, approximated by the network, closely mirrors the true value of $f(\Vec{x})$. To this end, we require a method to tweak these parameters.
+We have formally described a forward pass of a Feed-forward Neural Network for input data $\Vec{x}$, given weights $w$ and biases $b$. These latter elements, which we will denote as $\theta$, can be initialized in various ways. We do not wish to delve into these details here and we just consider random initialization. Once initialized, we aim to adjust these weights and biases so that the function $\hat{f}(\Vec{x})$, approximated by the network, closely mirrors the true value of $f(\Vec{x})$. To this end, we require a method to tweak these parameters.
 
 \subsection{Loss Function}
 
@@ -221,7 +221,14 @@ The computation of first and second order moments enables Adam to adjust the lea
 
 
 \subsubsection{Limited-memory BFGS}
-The BFGS (Broyden–Fletcher–Goldfarb–Shanno) algorithm is a quasi-Newtonian method that uses a formula to update the approximation of the inverse Hessian matrix at each iteration. However, for problems with a large number of variables, storing and manipulating this matrix can be very costly in terms of memory and computation time.
+The BFGS (Broyden–Fletcher–Goldfarb–Shanno) algorithm is a quasi-Newtonian method that uses a formula to update the approximation of the  Hessian matrix (or its inverse) at each iteration. As an example, from an initial value $\Vec{x}_0$ and an approximated Hessian matrix $B_0$, the following iterations are repeated until $\Vec{x}$ converges towards the solution:
+\begin{enumerate}
+    \item Find the direction of descent $\Vec{p}_k$ by solving $B_k\Vec{p}_k = - \nabla f(\Vec{x}_k)$
+    \item Perform a linear search to find the optimal step size $\alpha_k$, in the direction found in step 1, and then udpate
+        $\Vec{x}_{k+1} = \Vec{x}_k + \alpha_k \Vec{p}_k = \Vec{x}_k + \Vec{s}_k$
+    \item $\Vec{y}_k = f(\Vec{x}_{k+1}) - f(\Vec{x}_k)$
+    \item $B_{k+1} = B_k + \left(\Vec{y}_k \Vec{y}_k^T\right)/\left(\Vec{y}_k^T \Vec{s}_k \right) - \left( B_k \Vec{s}_k\Vec{s}_k^TB_k\right)/\left(\Vec{s}_k^T B_k \Vec{s}_k\right)$
+\end{enumerate} where $f(\Vec{x})$ is the function to minimize. This algorithm can also be expressed using the inverse Hessian matrix $H_k \equiv B_k^{-1}$. However, for problems with a large number of variables, storing and manipulating matrices $B_k$ or $H_k$ can be very costly in terms of memory and computation time.
 
 This is where the L-BFGS (Limited-memory BFGS) algorithm~\cite{nocedal1980updating} comes into play. It is specifically designed for problems with a large number of variables. Instead of storing the complete inverse Hessian matrix, L-BFGS only stores a few vectors representing the differences in gradients and positions from previous iterations. Using these vectors, it's possible to compute an approximation of the inverse Hessian matrix, which allows for the next iteration to be performed.
 
@@ -314,7 +321,7 @@ The backpropagation algorithm can be summarized in three main steps:
     \item Compute the backpropagation phase for each input-output pair and store the results $\frac{\partial \L}{\partial w_{ik}^{(l)}}$ for each weight $ w_{ik}^{(l)}$ connecting node $i$ in layer $l-1$ to a node $k$ in layer $l$, by proceeding from layer $L$, the output layer, to layer 1, the input layer. This process is illustrated in Figure~\ref{fig:illustration-layer-l} for any given layer $l$. The steps for computing the backward phase are as follows: 
     \begin{enumerate}
         \item Evaluate the error term for the final layer using equation~\eqref{eq:gradient-output-layer}.
-        \item Backpropagate the error terms for the hidden layers, starting from the last hidden layer $l=L-1$, by repeatedly applying equation~\eqref{eq:gradient-wrt-z-final}.
+        \item Back-propagate the error terms for the hidden layers, starting from the last hidden layer $l=L-1$, by repeatedly applying equation~\eqref{eq:gradient-wrt-z-final}.
         \item Evaluate the partial derivatives of the error with respect to $w_{ik}^{(l)}$ using equation~\eqref{eq:gradient-wrt-weights}.
     \end{enumerate}
     \item Update the parameters according to equation~\eqref{eq:gradient-descent}.
@@ -340,7 +347,7 @@ Auto-differentiation has several advantages over other differentiation methods, 
 
 Popular deep learning frameworks, such as PyTorch~\cite{NEURIPS2019_9015} that we use for this work, take advantage of automatic differentiation for fast computation. In fact, as mentioned in the introduction, one could argue that the use of PINNs, and their efficiency for quickly solving PDEs, relies strongly on this property of neural networks. 
 
-\section{The Universal Approximation Theorem}
+\section{The Universal Approximation Theorem}\label{sec:univ-approx}
 The universal approximation theorem asserts that a neural network with a single hidden layer can approximate any continuous function on compact subsets of $\mathbb{R}^n$, provided that the hidden layer's activation function is non-constant, bounded, and continuous.
 
 The theorem is generally attributed to Cybenko~\cite{cybenko1989} for the case of sigmoid activation neural networks, and was extended by Hornik~\cite{hornik1991approximation} to cover the case of other activation functions.
