@@ -78,7 +78,7 @@ Indeed, if the goal is to determine a general solution within a domain, there is
 
 \subsubsection{Results}
 
-The results of the PINN training are explicitly described by Figures~\ref{fig:test-plot-hernquist} and~\ref{fig:relative-error-hernquist}. Using a "light" PINN: $(32 + 32)^{(1)} + (32 \times 32 + 32)^{(2)} + (32 + 1)^{(3)} = 1153$ parameters, the error obtained is satisfactory, averaging 1.71\%. These results are achieved without performing hyperparameter search and could certainly be improved.
+The results of the PINN training are explicitly described by Figures~\ref{fig:test-plot-hernquist} and~\ref{fig:relative-error-hernquist}. Using a "light" PINN: $(1 \times 32 + 32)^{(1)} + (32 \times 32 + 32)^{(2)} + (32 \times 1+ 1)^{(3)} = 1153$ parameters\footnote{See Appendix~\ref{app:num-parameters} for details on how to compute the total number of parameters in a network.}, the error obtained is satisfactory, averaging 1.71\%. These results are achieved without performing hyperparameter search and could certainly be improved.
 
 With this result, we can determine the value of the potential at any point in the domain $[0, 1000]$, with great precision, and above all, almost instantly ($1.24$ms $\pm 3.68 \mu $s on an Apple M1 chip). However, if the idea is to \emph{solve} the Poisson equation with the PINN, in the case of the Hernquist potential, it is much more efficient to use traditional methods. For example, the solution is calculated in a few milliseconds using a Runge-Kutta method, compared to nearly a minute for the training of the PINN used here with $50,000$ epochs.
 
