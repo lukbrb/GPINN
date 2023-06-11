@@ -1,4 +1,5 @@
-\documentclass[a4paper, 11pt, twoside]{report}
+%\documentclass[a4paper, 11pt, twoside]{report}
+\documentclass[a4paper, 11pt]{report}
 \usepackage[a4paper]{geometry}
 \usepackage{lmodern}
 \usepackage{textcomp}
@@ -19,7 +20,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{graphicx} % Required for inserting images
 \usepackage{hyperref}
-\usepackage{amsmath, amsfonts}
+\usepackage{amsmath, amsthm, amsfonts}
 \usepackage{apalike}
 \usepackage{mathtools}
 \usepackage{minted}
@@ -28,6 +29,9 @@
 \usepackage{rotating}
 %\usepackage[acronym]{glossaries-extra}
 
+\newtheorem{theorem}{Theorem}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
 \newcommand{\dd}{\mathrm{d}}
 \renewcommand{\L}{\mathcal{L}}
 \renewcommand{\Vec}{\mathbf}
@@ -36,8 +40,9 @@
 \newcommand{\mysupervisor}{Prof. Dr. Marco Landoni \& Dr. Fabio Rigamonti}
 \newcommand{\mydate}{May 25\textsuperscript{th}}
 
+
 \hypersetup{
-    colorlinks=false,
+    colorlinks=true,
     linkcolor=blue,
     urlcolor=blue,
     citecolor=black,
@@ -141,6 +146,7 @@ I wish to express profound gratitude to my supervisors Marco Landoni and Fabio R
 \include{appendices/poisson-solution}
 \include{appendices/approx-theorem}
 \include{appendices/latin-hypercube-sampling}
+\include{appendices/parameters}
 
 \newpage
 \Large
